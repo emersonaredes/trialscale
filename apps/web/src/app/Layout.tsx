@@ -35,6 +35,9 @@ export function Layout() {
         <NavLink to="/rodada" className={({ isActive }) => (isActive ? 'ativo' : '')}>
           Rodada
         </NavLink>
+        <NavLink to="/conquistas" className={({ isActive }) => (isActive ? 'ativo' : '')}>
+          Conquistas
+        </NavLink>
         {!session?.isStaff && (
           <NavLink to="/assinatura" className={({ isActive }) => (isActive ? 'ativo' : '')}>
             {pago ? 'Assinatura' : 'Assinar ✨'}
