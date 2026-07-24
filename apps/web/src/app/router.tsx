@@ -15,6 +15,7 @@ import { RodadaPage } from '../features/paid/RodadaPage'
 import { ConquistasPage } from '../features/paid/ConquistasPage'
 import { CmsListPage } from '../features/cms/CmsListPage'
 import { CmsVersionPage } from '../features/cms/CmsVersionPage'
+import { CmsPesosPage } from '../features/cms/CmsPesosPage'
 import { Layout } from './Layout'
 import type { ReactNode } from 'react'
 
@@ -72,6 +73,14 @@ export function AppRoutes() {
           element={
             <SomenteStaff>
               <CmsVersionPage />
+            </SomenteStaff>
+          }
+        />
+        <Route
+          path="/cms/pesos"
+          element={
+            <SomenteStaff>
+              <CmsPesosPage />
             </SomenteStaff>
           }
         />

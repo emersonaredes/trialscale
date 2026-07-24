@@ -27,7 +27,7 @@ import {
   applicabilitySchema,
 } from '../dtos/content-dtos'
 import { saveObjectivesSchema, scorePainSchema } from '../dtos/journey-dtos'
-import { subscribeSchema, createRoundSchema } from '../dtos/paid-journey-dtos'
+import { subscribeSchema, createRoundSchema, setWeightSchema } from '../dtos/paid-journey-dtos'
 import { isTest } from '../config/env'
 
 export const routes = Router()
@@ -151,4 +151,6 @@ cms.put('/versions/:id', validate(saveDraftSchema), cmsController.saveDraft)
 cms.post('/versions/:id/publish', cmsController.publish)
 cms.post('/artifacts/:id/template', upload.single('file'), cmsController.uploadTemplate)
 cms.delete('/templates/:id', cmsController.deleteTemplate)
+cms.get('/priority-weights', cmsController.getPriorityWeights)
+cms.put('/priority-weights', validate(setWeightSchema), cmsController.setPriorityWeight)
 routes.use('/cms', cms)
