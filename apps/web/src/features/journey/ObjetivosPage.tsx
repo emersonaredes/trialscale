@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type DragEvent } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { journeyApi } from './api'
 import { useAuth } from '../auth/hooks/use-auth'
 
 /** Fase 1 (leve): o coração é a lista de objetivos PRIORIZADOS — a ordem
- *  importa (alimenta a ponderação da priorização na Fase 2). */
+ *  importa (alimenta a ponderação da priorização na Fase 2).
+ *  Máximo de 8 (foco); reordenação por DRAG AND DROP nativo. */
+const MAX_OBJETIVOS = 8
+
 export function ObjetivosPage() {
   const { session } = useAuth()
   const queryClient = useQueryClient()
@@ -12,8 +15,11 @@ export function ObjetivosPage() {
   const { data: meus } = useQuery({ queryKey: ['my-objectives'], queryFn: journeyApi.myObjectives })
 
   const [selecionados, setSelecionados] = useState<number[]>([])
+  const [arrastando, setArrastando] = useState<number | null>(null) // índice sendo arrastado
+  const [sobre, setSobre] = useState<number | null>(null) // índice sob o cursor
   const [salvo, setSalvo] = useState<string | null>(null)
   const podeEditar = session?.role === 'administrador' || session?.role === 'coordenador'
+  const atingiuLimite = selecionados.length >= MAX_OBJETIVOS
 
   useEffect(() => {
     // Hidrata a seleção local a partir do servidor (uma vez por carga).
@@ -29,20 +35,43 @@ export function ObjetivosPage() {
 
   function alternar(id: number) {
     setSalvo(null)
-    setSelecionados((atual) =>
-      atual.includes(id) ? atual.filter((x) => x !== id) : [...atual, id],
-    )
+    setSelecionados((atual) => {
+      if (atual.includes(id)) return atual.filter((x) => x !== id)
+      if (atual.length >= MAX_OBJETIVOS) return atual // limite: não adiciona
+      return [...atual, id]
+    })
   }
 
-  function mover(indice: number, delta: number) {
+  // ---- drag and drop nativo (lista pequena — sem lib) ----
+  function aoIniciarArrasto(e: DragEvent, indice: number) {
+    setArrastando(indice)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  function aoPassarSobre(e: DragEvent, indice: number) {
+    e.preventDefault() // necessário para permitir o drop
+    e.dataTransfer.dropEffect = 'move'
+    if (indice !== sobre) setSobre(indice)
+  }
+
+  function aoSoltar(indice: number) {
+    if (arrastando === null || arrastando === indice) {
+      limparArrasto()
+      return
+    }
     setSalvo(null)
     setSelecionados((atual) => {
       const novo = [...atual]
-      const alvo = indice + delta
-      if (alvo < 0 || alvo >= novo.length) return atual
-      ;[novo[indice], novo[alvo]] = [novo[alvo]!, novo[indice]!]
+      const [movido] = novo.splice(arrastando, 1)
+      novo.splice(indice, 0, movido!)
       return novo
     })
+    limparArrasto()
+  }
+
+  function limparArrasto() {
+    setArrastando(null)
+    setSobre(null)
   }
 
   async function salvar() {
@@ -56,9 +85,9 @@ export function ObjetivosPage() {
       <div>
         <h1>Objetivos estratégicos</h1>
         <p className="apoio">
-          Aonde o seu centro quer chegar? Escolha os objetivos que fazem sentido para a sua
-          realidade e ordene por importância — os mais importantes primeiro. Isso vai guiar a
-          priorização dos seus processos.
+          Aonde o seu centro quer chegar? Escolha até {MAX_OBJETIVOS} objetivos que fazem sentido
+          para a sua realidade e <b>arraste para ordenar</b> — os mais importantes primeiro. Isso
+          vai guiar a priorização dos seus processos.
         </p>
       </div>
 
@@ -67,28 +96,57 @@ export function ObjetivosPage() {
           {(menu ?? []).map((tema) => (
             <section key={tema.theme} className="cartao" style={{ padding: 16 }}>
               <h2 style={{ fontSize: 15 }}>{tema.theme}</h2>
-              {tema.objectives.map((o) => (
-                <label key={o.id} className="checkbox" style={{ padding: '3px 0' }}>
-                  <input
-                    type="checkbox"
-                    checked={selecionados.includes(o.id)}
-                    onChange={() => alternar(o.id)}
-                    disabled={!podeEditar}
-                  />
-                  {o.name}
-                </label>
-              ))}
+              {tema.objectives.map((o) => {
+                const marcado = selecionados.includes(o.id)
+                const bloqueado = !podeEditar || (!marcado && atingiuLimite)
+                return (
+                  <label
+                    key={o.id}
+                    className="checkbox"
+                    style={{ padding: '3px 0', opacity: bloqueado && !marcado ? 0.45 : 1 }}
+                    title={!marcado && atingiuLimite ? `Máximo de ${MAX_OBJETIVOS} objetivos — remova um para trocar` : undefined}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={marcado}
+                      onChange={() => alternar(o.id)}
+                      disabled={bloqueado}
+                    />
+                    {o.name}
+                  </label>
+                )
+              })}
             </section>
           ))}
         </div>
 
         <section className="cartao" style={{ position: 'sticky', top: 16 }}>
-          <h2>Suas prioridades ({selecionados.length})</h2>
+          <h2>
+            Suas prioridades{' '}
+            <span className="apoio" style={{ fontWeight: 400 }}>
+              ({selecionados.length}/{MAX_OBJETIVOS})
+            </span>
+          </h2>
+          {atingiuLimite && (
+            <p className="hint">
+              Limite de {MAX_OBJETIVOS} atingido — foco é parte do método. Remova um para trocar.
+            </p>
+          )}
           {selecionados.length === 0 && (
-            <p className="apoio">Escolha objetivos no menu ao lado — a ordem aqui é a prioridade.</p>
+            <p className="apoio">Escolha objetivos no menu ao lado — arraste para priorizar.</p>
           )}
           {selecionados.map((id, i) => (
-            <div key={id} className="artefato" style={{ alignItems: 'center' }}>
+            <div
+              key={id}
+              className={`artefato prioridade ${arrastando === i ? 'arrastando' : ''} ${sobre === i && arrastando !== null && arrastando !== i ? 'alvo-drop' : ''}`}
+              style={{ alignItems: 'center' }}
+              draggable={podeEditar}
+              onDragStart={(e) => aoIniciarArrasto(e, i)}
+              onDragOver={(e) => aoPassarSobre(e, i)}
+              onDrop={() => aoSoltar(i)}
+              onDragEnd={limparArrasto}
+            >
+              {podeEditar && <span className="alca-arrasto" title="Arraste para reordenar">⠿</span>}
               <b className="mono" style={{ width: 24 }}>{i + 1}º</b>
               <div className="info">
                 <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ink)' }}>
@@ -97,11 +155,9 @@ export function ObjetivosPage() {
                 <div className="apoio">{nomePorId.get(id)?.theme}</div>
               </div>
               {podeEditar && (
-                <span className="linha-acoes" style={{ gap: 2 }}>
-                  <button className="ghost pequeno" onClick={() => mover(i, -1)} disabled={i === 0}>↑</button>
-                  <button className="ghost pequeno" onClick={() => mover(i, 1)} disabled={i === selecionados.length - 1}>↓</button>
-                  <button className="ghost pequeno" onClick={() => alternar(id)}>×</button>
-                </span>
+                <button className="ghost pequeno" onClick={() => alternar(id)} title="Remover">
+                  ×
+                </button>
               )}
             </div>
           ))}

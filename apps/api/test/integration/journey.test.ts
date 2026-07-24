@@ -56,6 +56,19 @@ describe('objetivos estratégicos', () => {
     })
   })
 
+  it('limita a seleção a 8 objetivos (decisão 2026-07-24)', async () => {
+    const ids: number[] = []
+    for (let i = 0; i < 9; i++) {
+      const [o] = await objectiveRepository.findOrCreate('Tema Z', `Objetivo ${i}`)
+      ids.push(o.get('id') as number)
+    }
+    await runWithContext(ctx(tenantA), async () => {
+      await expect(journeyService.saveMyObjectives(ids)).rejects.toThrow(ValidationFailedError)
+      await journeyService.saveMyObjectives(ids.slice(0, 8)) // 8 passa
+      expect(await journeyService.getMyObjectives()).toHaveLength(8)
+    })
+  })
+
   it('CA-6: objetivos de A não aparecem para B', async () => {
     const [o1] = await objectiveRepository.findOrCreate('Tema X', 'Objetivo 1')
     await runWithContext(ctx(tenantA), () =>

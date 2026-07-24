@@ -46,8 +46,12 @@ export const journeyService = {
     })
   },
 
-  /** Substitui a seleção inteira; a ORDEM do array é a prioridade relativa. */
+  /** Substitui a seleção inteira; a ORDEM do array é a prioridade relativa.
+   *  Máximo de 8 (foco — decisão 2026-07-24; validado também no DTO). */
   async saveMyObjectives(objectiveIds: number[]) {
+    if (objectiveIds.length > 8) {
+      throw new ValidationFailedError({ objectiveIds: 'escolha no máximo 8 objetivos' })
+    }
     const unicos = [...new Set(objectiveIds)]
     if (unicos.length !== objectiveIds.length) {
       throw new ValidationFailedError({ objectiveIds: 'objetivos repetidos na lista' })
