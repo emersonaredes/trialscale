@@ -1,0 +1,131 @@
+import path from 'node:path'
+import fs from 'node:fs'
+import crypto from 'node:crypto'
+import type { Request, Response, NextFunction } from 'express'
+import { contentService, type DraftGraphInput } from '../services/content-service'
+import { contentRepository } from '../repositories/content-repository'
+import { getContext } from '../context/request-context'
+import { NotFoundError, ValidationFailedError } from '../errors/domain-errors'
+
+export const TEMPLATE_DIR =
+  process.env.TEMPLATE_DIR ?? path.resolve(__dirname, '../../storage/templates')
+
+export const cmsController = {
+  async listProcesses(_req: Request, res: Response, next: NextFunction) {
+    try {
+      res.json(await contentService.listProcessesWithStatus())
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  async createProcess(req: Request, res: Response, next: NextFunction) {
+    try {
+      res.status(201).json(await contentService.createProcess(req.body))
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  async updateProcess(req: Request, res: Response, next: NextFunction) {
+    try {
+      await contentService.updateProcess(Number(req.params.id), req.body)
+      res.status(204).end()
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  async lookups(_req: Request, res: Response, next: NextFunction) {
+    try {
+      const [types, conditions, processes] = await Promise.all([
+        contentRepository.listArtifactTypes(),
+        contentRepository.listConditions(),
+        contentRepository.listProcesses(),
+      ])
+      res.json({
+        artifactTypes: types.map((t) => ({ code: t.get('code'), name: t.get('name') })),
+        conditions: conditions.map((c) => ({ code: c.get('code'), description: c.get('description') })),
+        processes: processes.map((p) => ({ id: p.get('id'), code: p.get('code'), name: p.get('name') })),
+      })
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  async createDraft(req: Request, res: Response, next: NextFunction) {
+    try {
+      const ctx = getContext()
+      res
+        .status(201)
+        .json(await contentService.createDraft(Number(req.params.id), ctx?.userId ?? null))
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  async getVersion(req: Request, res: Response, next: NextFunction) {
+    try {
+      res.json(await contentService.getVersionGraph(Number(req.params.id)))
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  async saveDraft(req: Request, res: Response, next: NextFunction) {
+    try {
+      await contentService.saveDraft(Number(req.params.id), req.body as DraftGraphInput)
+      res.status(204).end()
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  async publish(req: Request, res: Response, next: NextFunction) {
+    try {
+      const ctx = getContext()
+      res.json(await contentService.publish(Number(req.params.id), ctx?.userId ?? null))
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  /** Upload de template (anexos assimétricos: SÓ staff anexa — CA-9). */
+  async uploadTemplate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const file = (req as Request & { file?: Express.Multer.File }).file
+      if (!file) throw new ValidationFailedError({ file: 'arquivo obrigatório (campo "file")' })
+      const artifactId = Number(req.params.id)
+      const artifact = await contentRepository.findArtifactById(artifactId)
+      if (!artifact) throw new NotFoundError('Artefato não encontrado.')
+
+      fs.mkdirSync(TEMPLATE_DIR, { recursive: true })
+      const ref = `${crypto.randomUUID()}${path.extname(file.originalname)}`
+      fs.writeFileSync(path.join(TEMPLATE_DIR, ref), file.buffer)
+
+      const row = await contentRepository.createTemplate({
+        artifact_id: artifactId,
+        file_ref: ref,
+        filename: file.originalname,
+        mime_type: file.mimetype,
+        size_bytes: file.size,
+      })
+      res.status(201).json({ id: row.get('id'), filename: file.originalname })
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  async deleteTemplate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const template = await contentRepository.findTemplateById(Number(req.params.id))
+      if (!template) throw new NotFoundError('Template não encontrado.')
+      const filePath = path.join(TEMPLATE_DIR, template.get('file_ref') as string)
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+      await contentRepository.destroyTemplate(Number(req.params.id))
+      res.status(204).end()
+    } catch (err) {
+      next(err)
+    }
+  },
+}
