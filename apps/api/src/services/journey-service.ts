@@ -4,6 +4,7 @@ import {
   painScoreRepository,
 } from '../repositories/journey-repository'
 import { contentRepository } from '../repositories/content-repository'
+import { priorityLookupRepository } from '../repositories/paid-journey-repository'
 import { NotFoundError, ValidationFailedError } from '../errors/domain-errors'
 
 /** Ordena códigos de processo naturalmente: 1.1 < 1.2 < 2.5 < 3.4 < 4 < 5 < 13. */
@@ -119,12 +120,73 @@ export const journeyService = {
   },
 
   // ---------------------------------------------------------- fotografia
+  /** Fotografia v3: além das médias por grupo, a MATRIZ dor × relevância
+   *  estratégica — relevância derivada dos objetivos priorizados × mapa
+   *  objetivo→processo (mesma ponderação da priorização, normalizada 0–5). */
   async getPhoto() {
     const { processes, answered, total } = await this.getThermometer()
     const respondidos = processes.filter((p) => p.score != null)
 
+    // Relevância estratégica 0–5 + vínculos objetivo↔processo
+    const meusObjetivos = await tenantObjectiveRepository.listOrdered()
+    const n = meusObjetivos.length
+    const rankFactor = new Map(
+      meusObjetivos.map((o) => [
+        o.get('objective_id') as number,
+        (n - (o.get('priority_rank') as number) + 1) / Math.max(n, 1),
+      ]),
+    )
+    const weights = await priorityLookupRepository.listWeights()
+    const relevanceRaw = new Map<number, number>()
+    const objetivosPorProcesso = new Map<number, number[]>()
+    const processosPorObjetivo = new Map<number, number[]>()
+    for (const w of weights) {
+      const objectiveId = w.get('objective_id') as number
+      const fator = rankFactor.get(objectiveId)
+      if (!fator) continue
+      const pid = w.get('process_id') as number
+      relevanceRaw.set(pid, (relevanceRaw.get(pid) ?? 0) + Number(w.get('weight')) * fator)
+      if (!objetivosPorProcesso.has(pid)) objetivosPorProcesso.set(pid, [])
+      objetivosPorProcesso.get(pid)!.push(objectiveId)
+      if (!processosPorObjetivo.has(objectiveId)) processosPorObjetivo.set(objectiveId, [])
+      processosPorObjetivo.get(objectiveId)!.push(pid)
+    }
+    const maxRelevance = Math.max(...relevanceRaw.values(), 0)
+    const relevance5 = (pid: number) =>
+      maxRelevance > 0
+        ? Math.round(((relevanceRaw.get(pid) ?? 0) / maxRelevance) * 5 * 10) / 10
+        : 0
+
+    const itens = processes.map((p) => ({
+      ...p,
+      relevance: relevance5(p.processId),
+      objectiveIds: objetivosPorProcesso.get(p.processId) ?? [],
+    }))
+
+    const todosObjetivos = await objectiveRepository.listAll()
+    const nomePorObjetivo = new Map(
+      todosObjetivos.map((o) => [o.get('id') as number, o.get('name') as string]),
+    )
+    const scorePorProcesso = new Map(respondidos.map((p) => [p.processId, p.score as number]))
+    const objectives = meusObjetivos.map((o) => {
+      const objectiveId = o.get('objective_id') as number
+      const processIds = processosPorObjetivo.get(objectiveId) ?? []
+      const dores = processIds
+        .map((pid) => scorePorProcesso.get(pid))
+        .filter((s): s is number => s != null)
+      return {
+        objectiveId,
+        name: nomePorObjetivo.get(objectiveId) ?? '',
+        rank: o.get('priority_rank') as number,
+        processIds,
+        averagePain: dores.length
+          ? Math.round((dores.reduce((a, b) => a + b, 0) / dores.length) * 10) / 10
+          : null,
+      }
+    })
+
     const grupos = ['central', 'suporte', 'gestao'].map((grupo) => {
-      const doGrupo = processes.filter((p) => p.processGroup === grupo)
+      const doGrupo = itens.filter((p) => p.processGroup === grupo)
       const comNota = doGrupo.filter((p) => p.score != null)
       return {
         group: grupo,
@@ -137,10 +199,10 @@ export const journeyService = {
       }
     })
 
-    const topPains = [...respondidos]
+    const topPains = [...itens.filter((p) => p.score != null)]
       .sort((a, b) => (b.score ?? 0) - (a.score ?? 0) || compareProcessCode(a.code, b.code))
       .slice(0, 5)
 
-    return { groups: grupos, topPains, answered, total }
+    return { groups: grupos, topPains, objectives, answered, total }
   },
 }

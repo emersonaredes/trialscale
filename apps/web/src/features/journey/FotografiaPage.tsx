@@ -1,43 +1,39 @@
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { journeyApi } from './api'
+import { journeyApi, type PhotoProcess } from './api'
+import { corDaDor } from '../../shared/lib/cores'
+import { useAuth } from '../auth/hooks/use-auth'
 
-const GRUPO_TITULO: Record<string, string> = {
-  central: 'Processos centrais',
-  suporte: 'Processos de suporte',
-  gestao: 'Processos de gestão',
-}
-
-function corDaDor(score: number): string {
-  if (score >= 4) return 'var(--coral)'
-  if (score === 3) return 'var(--ambar)'
-  return 'var(--azul-400)'
-}
-
-/** A entrega de valor do gratuito: a fotografia da dor do centro. */
+/** Fotografia v3: MATRIZ dor × estratégia em quadrantes (proposta v3 §5).
+ *  Y = dor declarada (5 no topo) · X = relevância estratégica (dos seus
+ *  objetivos priorizados). A entrega de valor do gratuito. */
 export function FotografiaPage() {
+  const { session } = useAuth()
+  const pago = Boolean(session?.isStaff || session?.tenant?.planCode != null)
   const { data, isLoading } = useQuery({ queryKey: ['photo'], queryFn: journeyApi.photo })
+  const [objetivoSelecionado, setObjetivoSelecionado] = useState<number | null>(null)
+
+  const todos = useMemo(() => (data ? data.groups.flatMap((g) => g.processes) : []), [data])
+  const naMatriz = todos.filter((p) => p.score != null)
+  const foraDaMatriz = todos.filter((p) => p.score == null)
 
   if (isLoading || !data) return <p className="carregando">Revelando a fotografia…</p>
 
   const incompleta = data.answered < data.total
+
+  function ligado(p: PhotoProcess): boolean {
+    return objetivoSelecionado == null || p.objectiveIds.includes(objetivoSelecionado)
+  }
 
   return (
     <div className="pilha">
       <div className="cartao cartao-destaque">
         <h1>Fotografia do seu centro</h1>
         <p className="apoio">
-          A dor declarada pela sua equipe em {data.answered} de {data.total} processos.
-          Autodeclarada — é um instrumento de gestão, não uma certificação.
+          Dor declarada × relevância para os seus objetivos, em {data.answered} de {data.total}{' '}
+          processos. Autodeclarada — instrumento de gestão, não certificação.
         </p>
-        <div className="linha-acoes" style={{ marginTop: 8 }}>
-          {data.groups.map((g) => (
-            <div key={g.group} style={{ marginRight: 24 }}>
-              <span className="apoio">{GRUPO_TITULO[g.group]}</span>
-              <div className="display">{g.averagePain?.toFixed(1) ?? '—'}</div>
-            </div>
-          ))}
-        </div>
       </div>
 
       {incompleta && (
@@ -47,55 +43,105 @@ export function FotografiaPage() {
         </div>
       )}
 
-      {data.topPains.length > 0 && (
-        <section className="cartao">
-          <h2>Suas maiores dores</h2>
-          {data.topPains.map((p, i) => (
-            <div key={p.processId} className="artefato" style={{ alignItems: 'center' }}>
-              <b className="mono" style={{ width: 24 }}>{i + 1}º</b>
-              <div className="info">
-                <div className="titulo">
-                  {p.code && <span className="mono">{p.code}</span>} {p.name}
-                </div>
-              </div>
-              <span
-                className="nivel"
-                style={{ background: corDaDor(p.score ?? 0), color: '#fff' }}
-              >
-                dor <b>{p.score}</b>
-              </span>
-            </div>
+      <div className="matriz-wrap">
+        {/* ---- Matriz em quadrantes ---- */}
+        <div className="matriz">
+          <div className="quadrante" style={{ right: 0, top: 0, background: 'rgba(253,231,225,.75)' }}>
+            <span className="rotulo-q" style={{ top: 8, right: 10, color: '#b3402a', textAlign: 'right' }}>
+              Atacar agora
+            </span>
+          </div>
+          <div className="quadrante" style={{ left: 0, top: 0, background: 'rgba(253,231,225,.4)' }}>
+            <span className="rotulo-q" style={{ top: 8, left: 10, color: '#c97b64' }}>
+              Dói, fora dos objetivos
+            </span>
+          </div>
+          <div className="quadrante" style={{ right: 0, bottom: 0, background: 'rgba(234,247,252,.6)' }}>
+            <span className="rotulo-q" style={{ bottom: 8, right: 10, color: 'var(--azul-600)', textAlign: 'right' }}>
+              Estratégico · dor baixa
+            </span>
+          </div>
+          <div className="quadrante" style={{ left: 0, bottom: 0 }}>
+            <span className="rotulo-q" style={{ bottom: 8, left: 10, color: 'var(--secundario)' }}>
+              Observar
+            </span>
+          </div>
+          <hr className="mediana-h" />
+          <hr className="mediana-v" />
+
+          {naMatriz.map((p) => (
+            <span
+              key={p.processId}
+              className={`ponto ${ligado(p) ? '' : 'apagado'}`}
+              style={{
+                left: `${6 + ((p.relevance ?? 0) / 5) * 88}%`,
+                top: `${94 - ((p.score ?? 0) / 5) * 82}%`,
+                background: corDaDor(p.score ?? 0),
+              }}
+              title={`${p.name} — dor ${p.score}/5 · relevância ${p.relevance}/5${
+                p.objectiveIds.length
+                  ? ` · ligado a ${p.objectiveIds.length} objetivo${p.objectiveIds.length > 1 ? 's' : ''}`
+                  : ''
+              }`}
+            >
+              {p.code}
+            </span>
           ))}
-          <p className="apoio" style={{ marginTop: 10 }}>
-            O próximo passo natural: abrir o <Link to="/processos">Raio-X</Link> dos processos que
-            mais doem e descobrir exatamente quais artefatos faltam para a dor diminuir.
-          </p>
-        </section>
+        </div>
+
+        {/* ---- Painel lateral: seus objetivos ---- */}
+        <aside className="cartao painel-objetivos" style={{ padding: 10 }}>
+          <h2 style={{ margin: '4px 6px 6px' }}>Seus objetivos</h2>
+          {data.objectives.length === 0 && (
+            <p className="apoio" style={{ margin: 6 }}>
+              <Link to="/objetivos">Priorize objetivos</Link> para ver a dimensão estratégica da
+              matriz.
+            </p>
+          )}
+          {data.objectives.map((o) => {
+            const selecionado = objetivoSelecionado === o.objectiveId
+            return (
+              <div
+                key={o.objectiveId}
+                className={`item-objetivo ${selecionado ? 'selecionado' : ''}`}
+                onClick={() => setObjetivoSelecionado(selecionado ? null : o.objectiveId)}
+                title="Clique para destacar os processos ligados"
+              >
+                <b className="mono" style={{ width: 20, flex: 'none' }}>{o.rank}º</b>
+                <span style={{ flex: 1 }}>
+                  <span style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: 'var(--ink)' }}>
+                    {o.name}
+                  </span>
+                  <span className="apoio">
+                    {o.processIds.length === 1 ? '1 processo' : `${o.processIds.length} processos`}
+                    {o.averagePain != null && ` · dor média ${o.averagePain.toFixed(1).replace('.', ',')}`}
+                  </span>
+                </span>
+              </div>
+            )
+          })}
+        </aside>
+      </div>
+
+      {foraDaMatriz.length > 0 && (
+        <p className="apoio">
+          Fora da matriz (sem nota de dor): {foraDaMatriz.map((p) => p.code).join(', ')} —{' '}
+          <Link to="/termometro">completar agora</Link>.
+        </p>
       )}
 
-      {data.groups.map((g) => (
-        <section key={g.group} className="cartao">
-          <h2 style={{ fontSize: 15 }}>
-            {GRUPO_TITULO[g.group]} <span className="apoio">({g.answered}/{g.total} respondidos)</span>
-          </h2>
-          {g.processes.map((p) => (
-            <div key={p.processId} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '5px 0' }}>
-              <span className="mono" style={{ width: 34, flex: 'none' }}>{p.code}</span>
-              <span style={{ width: 300, flex: 'none', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.name}>
-                {p.published ? <Link to={`/processos/${p.processId}`}>{p.name}</Link> : p.name}
-              </span>
-              <div className="progresso" style={{ flex: 1 }}>
-                {p.score != null && (
-                  <span style={{ width: `${(p.score / 5) * 100}%`, background: corDaDor(p.score) }} />
-                )}
-              </div>
-              <b style={{ width: 20, textAlign: 'right', color: p.score != null ? 'var(--ink)' : 'var(--borda)' }}>
-                {p.score ?? '—'}
-              </b>
-            </div>
-          ))}
-        </section>
-      ))}
+      {/* ---- Próximo passo ---- */}
+      <div className="proximo-passo">
+        <span>
+          <span className="eyebrow">Próximo passo</span>
+          <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600, color: 'var(--ink)' }}>
+            Abrir o Raio-X das suas 3 maiores dores e transformá-las em plano
+          </span>
+        </span>
+        <Link to={pago ? '/processos' : '/assinatura'}>
+          <button className="avancar">{pago ? 'Abrir Raio-X' : 'Conhecer os planos'} →</button>
+        </Link>
+      </div>
     </div>
   )
 }

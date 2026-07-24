@@ -195,25 +195,36 @@ function RodadaAtiva({ podeGerir, aoConcluir }: { podeGerir: boolean; aoConcluir
         )}
       </div>
 
-      <section className="cartao" style={{ padding: 10 }}>
-        <div className="linha-acoes">
-          {round.processes.map((p) => (
-            <span key={p.processId} className="linha-acoes" style={{ gap: 5, marginRight: 14 }}>
-              <span className="mono">{p.code}</span>
-              <b style={{ color: 'var(--ink)', fontSize: 12.5, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.name}>
-                {p.name}
-              </b>
+      {/* Progresso da rodada (v3 §7): uma linha por processo, acima do kanban */}
+      <section className="cartao">
+        <h2>Progresso da rodada</h2>
+        {round.processes.map((p) => (
+          <div key={p.processId} className="artefato" style={{ alignItems: 'center' }}>
+            <span className="mono" style={{ width: 30 }}>{p.code}</span>
+            <b style={{ color: 'var(--ink)', fontSize: 12.5, width: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.name}>
+              {p.name}
+            </b>
+            <span style={{ opacity: 0.55 }}>
               <LevelBadge level={p.baselineLevel} />
-              <span className="apoio">→</span>
-              <LevelBadge level={p.currentLevel} />
-              {p.leveledUp ? (
-                <span style={{ color: 'var(--verde-700)', fontWeight: 700 }}>✓</span>
-              ) : (
-                <span className="apoio">faltam {p.nextLevelMissing} essenciais</span>
-              )}
             </span>
-          ))}
-        </div>
+            <span className="apoio">→</span>
+            <LevelBadge level={p.currentLevel} />
+            <div className="progresso" style={{ flex: 1, maxWidth: 160 }}>
+              <span
+                style={{
+                  width: `${p.essentialsTotal ? Math.round((100 * p.essentialsComplete) / p.essentialsTotal) : 0}%`,
+                }}
+              />
+            </div>
+            {p.leveledUp ? (
+              <span style={{ color: 'var(--verde-700)', fontWeight: 700, fontSize: 12.5 }}>
+                ✓ subiu de nível!
+              </span>
+            ) : (
+              <span className="apoio">faltam {p.nextLevelMissing} essenciais</span>
+            )}
+          </div>
+        ))}
       </section>
 
       {erro && <p className="erro-msg">{erro}</p>}

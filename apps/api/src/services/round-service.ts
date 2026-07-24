@@ -91,6 +91,8 @@ export const roundService = {
         currentLevel: m.level,
         leveledUp: m.level > baseline,
         nextLevelMissing: m.nextLevelMissing,
+        essentialsTotal: m.essentialsTotal,
+        essentialsComplete: m.essentialsComplete,
       })
     }
 

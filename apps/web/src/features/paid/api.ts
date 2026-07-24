@@ -36,6 +36,8 @@ export interface RoundInfo {
     currentLevel: number
     leveledUp: boolean
     nextLevelMissing: number
+    essentialsTotal: number
+    essentialsComplete: number
   }>
   canConclude: boolean
 }

@@ -1,139 +1,162 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../auth/hooks/use-auth'
-import { processesApi } from '../processes/api'
 import { journeyApi } from '../journey/api'
-import { LevelBadge } from '../../shared/components/badges'
+import { useJourneySteps } from '../journey/use-journey-steps'
+import { paidApi } from '../paid/api'
+import { apiFetch } from '../../shared/lib/api-client'
+import { corDaDor } from '../../shared/lib/cores'
 
-const ROTULO_PAPEL: Record<string, string> = {
-  administrador: 'Administrador',
-  coordenador: 'Coordenador',
-  membro: 'Membro',
+interface AchievementStatus {
+  code: string
+  name: string
+  earnedAt: string | null
 }
 
+/** Home v3 = COCKPIT: um único próximo passo calculado do estado real. */
 export function HomePage() {
   const { session } = useAuth()
-  const pago = session?.isStaff || session?.tenant?.planCode != null
-  const { data } = useQuery({
-    queryKey: ['overview'],
-    queryFn: processesApi.overview,
-    retry: false,
-    enabled: pago, // gratuito não tem Raio-X — evita 403 no boot
-  })
+  const { passos, pago } = useJourneySteps()
+
   const { data: termometro } = useQuery({ queryKey: ['thermometer'], queryFn: journeyApi.thermometer })
-  const { data: meusObjetivos } = useQuery({ queryKey: ['my-objectives'], queryFn: journeyApi.myObjectives })
+  const { data: foto } = useQuery({ queryKey: ['photo'], queryFn: journeyApi.photo })
+  const { data: rodada } = useQuery({
+    queryKey: ['round'],
+    queryFn: paidApi.currentRound,
+    retry: false,
+    enabled: pago,
+  })
+  const { data: conquistas } = useQuery({
+    queryKey: ['achievements'],
+    queryFn: () =>
+      apiFetch<{ achievements: AchievementStatus[]; newlyEarned: string[] }>('/api/achievements'),
+    retry: false,
+    enabled: pago,
+  })
 
-  const aplicaveis = data?.processes.filter((p) => p.applies) ?? []
-  const noTopo = aplicaveis.filter((p) => p.level === 5).length
+  // Cadeia de decisão do PRÓXIMO PASSO (proposta v3 §3a)
+  const objetivosOk = passos[0]?.estado === 'feito'
+  const termometroOk = passos[1]?.estado === 'feito'
+  const faltam = termometro ? termometro.total - termometro.answered : null
+  const proximo = (() => {
+    if (pago && rodada?.round) {
+      return {
+        eyebrow: `Rodada ${rodada.round.sequenceNo} em andamento`,
+        titulo: 'Continue a sua rodada — cada artefato completo é um degrau.',
+        cta: `Continuar a Rodada ${rodada.round.sequenceNo}`,
+        rota: '/rodada',
+      }
+    }
+    if (!objetivosOk) {
+      return {
+        eyebrow: 'Comece por aqui',
+        titulo: 'Aonde o seu centro quer chegar? Priorize até 8 objetivos.',
+        cta: 'Definir objetivos',
+        rota: '/objetivos',
+      }
+    }
+    if (!termometroOk) {
+      return {
+        eyebrow: 'Seu próximo passo',
+        titulo: `Termine o termômetro — ${faltam != null ? `faltam ${faltam} processos` : 'quase lá'}.`,
+        cta: 'Continuar o termômetro',
+        rota: '/termometro',
+      }
+    }
+    if (!pago) {
+      return {
+        eyebrow: 'Fotografia pronta',
+        titulo: 'Sua dor está mapeada. O plano abre o Raio-X e as rodadas de melhoria.',
+        cta: 'Conhecer os planos',
+        rota: '/assinatura',
+      }
+    }
+    return {
+      eyebrow: 'Fotografia revelada',
+      titulo: 'Abra o Raio-X das suas maiores dores e monte a primeira rodada.',
+      cta: 'Abrir o Raio-X',
+      rota: '/processos',
+    }
+  })()
 
-  const passos = [
-    {
-      rota: '/objetivos',
-      titulo: '1. Objetivos',
-      feito: (meusObjetivos?.length ?? 0) > 0,
-      detalhe: meusObjetivos?.length ? `${meusObjetivos.length} priorizados` : 'Defina aonde quer chegar',
-    },
-    {
-      rota: '/termometro',
-      titulo: '2. Termômetro',
-      feito: termometro != null && termometro.answered === termometro.total && termometro.total > 0,
-      detalhe: termometro ? `${termometro.answered}/${termometro.total} respondidos` : '—',
-    },
-    {
-      rota: '/fotografia',
-      titulo: '3. Fotografia',
-      feito: false,
-      detalhe: 'O retrato da sua dor',
-    },
-  ]
+  const conquistasRecentes = (conquistas?.achievements ?? [])
+    .filter((a) => a.earnedAt != null)
+    .sort((a, b) => new Date(b.earnedAt!).getTime() - new Date(a.earnedAt!).getTime())
+    .slice(0, 4)
 
   return (
     <div className="pilha">
-      <div className="cartao cartao-destaque">
-        <h1>Olá, {session?.user.name?.split(' ')[0]} 👋</h1>
-        <p className="apoio">
-          {session?.tenant?.name ?? 'Equipe TrialScale'} ·{' '}
-          {session?.role ? ROTULO_PAPEL[session.role] : 'Staff'}
+      {/* a) Hero do próximo passo */}
+      <section className="hero-passo">
+        <span className="eyebrow">{proximo.eyebrow}</span>
+        <h1>{proximo.titulo}</h1>
+        <Link to={proximo.rota}>
+          <button className="avancar">{proximo.cta} →</button>
+        </Link>
+        <p className="apoio" style={{ margin: '10px 0 0', color: 'var(--azul-200)' }}>
+          {session?.tenant?.name ?? 'Equipe TrialScale'} · jornada autodeclarada de maturidade
         </p>
-        {data?.overallLevel != null && (
-          <p style={{ margin: '10px 0 0' }}>
-            Nível geral do centro: <b className="display">{data.overallLevel.toFixed(1)}</b>
-          </p>
-        )}
-      </div>
+      </section>
 
+      {/* b) Mapa horizontal da jornada */}
       <section className="cartao">
-        <h2>Sua jornada</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-          {passos.map((p) => (
-            <Link key={p.rota} to={p.rota} style={{ textDecoration: 'none' }}>
-              <div className="cartao" style={{ padding: 14, borderColor: p.feito ? 'var(--verde-300)' : undefined }}>
-                <div style={{ fontWeight: 700, color: 'var(--ink)' }}>
-                  {p.titulo} {p.feito && '✓'}
-                </div>
-                <div className="apoio">{p.detalhe}</div>
-              </div>
-            </Link>
+        <div className="mapa-jornada">
+          {passos.map((p, i) => (
+            <>
+              {i > 0 && <span key={`t${p.n}`} className={`tramo ${passos[i - 1]!.estado === 'feito' ? 'feito' : ''}`} />}
+              <Link key={p.rota} to={p.rota} className={`no ${p.estado}`}>
+                <span className="bola">{p.estado === 'feito' ? '✓' : p.n}</span>
+                <span className="rotulo">{p.nome}</span>
+              </Link>
+            </>
           ))}
         </div>
       </section>
 
-      {pago ? (
+      {/* c) Grid: dores + conquistas recentes */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 12, alignItems: 'start' }}>
         <section className="cartao">
-          <h2>Sua maturidade</h2>
-          {aplicaveis.length > 0 ? (
-            <>
-              <p className="apoio">
-                {aplicaveis.length} processos publicados · {noTopo} no nível Otimizado
-              </p>
-              <div className="linha-acoes" style={{ marginBottom: 10 }}>
-                {aplicaveis.slice(0, 6).map((p) => (
-                  <Link key={p.processId} to={`/processos/${p.processId}`} title={p.name} style={{ textDecoration: 'none' }}>
-                    <span className="chip-processo">
-                      <span className="nome">
-                        {p.code && <span className="mono">{p.code}</span>} {p.name}
-                      </span>
-                      <LevelBadge level={p.level} />
-                    </span>
-                  </Link>
-                ))}
+          <h2>Onde mais dói hoje</h2>
+          {(foto?.topPains ?? []).slice(0, 3).map((p) => (
+            <div key={p.processId} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0' }}>
+              <span className="mono" style={{ width: 30 }}>{p.code}</span>
+              <span style={{ flex: 1, fontSize: 12.5, color: 'var(--ink)', fontWeight: 600 }}>{p.name}</span>
+              <div className="progresso" style={{ width: 110 }}>
+                <span style={{ width: `${((p.score ?? 0) / 5) * 100}%`, background: corDaDor(p.score ?? 0) }} />
               </div>
-              <div className="linha-acoes">
-                <Link to="/rodada">
-                  <button>Minha rodada</button>
-                </Link>
-                <Link to="/processos">
-                  <button className="secundario">Todos os processos</button>
-                </Link>
-              </div>
-            </>
-          ) : (
+              <b style={{ width: 14, textAlign: 'right' }}>{p.score}</b>
+            </div>
+          ))}
+          {(foto?.topPains ?? []).length === 0 && (
             <p className="apoio">
-              Assim que a equipe TrialScale publicar conteúdo, seus processos aparecem aqui.
+              Responda o <Link to="/termometro">termômetro</Link> para revelar as suas dores.
             </p>
           )}
         </section>
-      ) : (
-        <section className="cartao">
-          <h2>Pronto para a trilha? 🧗</h2>
-          <p className="apoio">
-            O plano pago abre o Raio-X de artefatos, os níveis de maturidade, a priorização e as
-            rodadas de melhoria — o caminho para as dores da sua fotografia diminuírem.
-          </p>
-          <Link to="/assinatura">
-            <button>Conhecer os planos</button>
-          </Link>
-        </section>
-      )}
 
-      <section className="cartao">
-        <h2>Como funciona</h2>
-        <p className="apoio">
-          Cada processo tem artefatos por nível (1 Inicial → 5 Otimizado). Marque o que seu centro
-          já possui — os <b>essenciais</b> definem o nível; os complementares somam ao progresso. A
-          régua é autodeclarada: apoio à gestão, nunca certificação.
-        </p>
-      </section>
+        <section className="cartao">
+          <h2>Conquistas recentes</h2>
+          {pago ? (
+            conquistasRecentes.length > 0 ? (
+              conquistasRecentes.map((a) => (
+                <div key={a.code} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--verde-500)', flex: 'none' }} />
+                  <span style={{ flex: 1, fontSize: 12.5, color: 'var(--ink)', fontWeight: 600 }}>{a.name}</span>
+                  <span className="apoio">{new Date(a.earnedAt!).toLocaleDateString('pt-BR')}</span>
+                </div>
+              ))
+            ) : (
+              <p className="apoio">
+                Suas vitórias vão aparecer aqui — comece pela <Link to="/rodada">rodada</Link>.
+              </p>
+            )
+          ) : (
+            <p className="apoio">
+              Conquistas fazem parte da jornada paga. <Link to="/assinatura">Conheça os planos</Link>.
+            </p>
+          )}
+        </section>
+      </div>
     </div>
   )
 }
