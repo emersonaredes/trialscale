@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(\"removido\")",
+      "PowerShell(Set-Location c:\\\\Users\\\\emers\\\\TrialScale; npm run typecheck 2>&1 | Select-Object -Last 4; \"type=$LASTEXITCODE\"; npm run lint 2>&1 | Select-Object -Last 2; \"lint=$LASTEXITCODE\")"
+    ]
+  }
+}

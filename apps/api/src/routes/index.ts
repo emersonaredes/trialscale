@@ -7,6 +7,7 @@ import { cmsController } from '../controllers/cms-controller'
 import { maturityController } from '../controllers/maturity-controller'
 import { journeyController } from '../controllers/journey-controller'
 import { paidJourneyController } from '../controllers/paid-journey-controller'
+import { gamificationController } from '../controllers/gamification-controller'
 import { authenticate } from '../middlewares/authenticate'
 import { requireStaff } from '../middlewares/require-staff'
 import { requireRole } from '../middlewares/require-role'
@@ -131,6 +132,10 @@ routes.put(
   journeyController.scorePain,
 )
 routes.get('/photo', authenticate, journeyController.photo)
+
+// ---- Gamificação e Mapa de Maturidade (Etapa 4 — jornada paga) ----
+routes.get('/achievements', authenticate, requirePaidPlan, gamificationController.achievements)
+routes.get('/report/pdf', authenticate, requirePaidPlan, gamificationController.reportPdf)
 
 // ---- CMS (backoffice — SÓ staff; CA-8/CA-9) ----
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })

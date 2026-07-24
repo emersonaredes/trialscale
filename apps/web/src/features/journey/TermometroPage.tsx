@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { journeyApi } from './api'
+import { corDaDor } from '../../shared/lib/cores'
+import { ProximoPasso } from '../../shared/components/ProximoPasso'
 
 const GRUPO_TITULO: Record<string, string> = {
   central: 'Processos centrais — do estudo entrar ao estudo encerrar',
@@ -51,15 +53,22 @@ export function TermometroPage() {
           <div className={`progresso ${data.answered / data.total >= 0.8 ? 'quase' : ''}`}>
             <span style={{ width: `${Math.round((100 * data.answered) / data.total)}%` }} />
           </div>
-          {completo && (
-            <Link to="/fotografia">
-              <button className="completar pequeno" style={{ marginTop: 8 }}>
-                Ver minha fotografia 🎉
-              </button>
-            </Link>
-          )}
         </div>
       </div>
+
+      {completo && (
+        <div className="banner-fotografia">
+          <div>
+            <b style={{ fontSize: 15 }}>Aê! Termômetro completo 🎉</b>
+            <div style={{ fontSize: 12.5, opacity: 0.9 }}>
+              A dor dos {data.total} processos está mapeada — sua fotografia está pronta.
+            </div>
+          </div>
+          <Link to="/fotografia">
+            <button>Revelar minha fotografia →</button>
+          </Link>
+        </div>
+      )}
 
       <div className="aviso">
         💡 <b>Recomendação:</b> responda em equipe, num workshop com todas as áreas — a dor da
@@ -75,6 +84,11 @@ export function TermometroPage() {
             <h2 style={{ fontSize: 15 }}>{GRUPO_TITULO[grupo]}</h2>
             {processos.map((p) => (
               <div key={p.processId} className="artefato" style={{ alignItems: 'center' }}>
+                <span
+                  className="dot-dor"
+                  style={p.score != null ? { background: corDaDor(p.score), borderColor: 'transparent' } : undefined}
+                  title={p.score != null ? `dor ${p.score}/5` : 'sem resposta'}
+                />
                 <div className="info">
                   <div className="titulo">
                     {p.code && <span className="mono">{p.code}</span>} {p.name}
@@ -104,11 +118,15 @@ export function TermometroPage() {
         )
       })}
 
-      <div className="linha-acoes">
-        <Link to="/fotografia">
-          <button className="secundario">Ver fotografia parcial</button>
-        </Link>
-      </div>
+      <ProximoPasso
+        titulo={
+          completo
+            ? 'A dor está mapeada — hora de revelar o retrato do seu centro'
+            : `Você pode revelar a fotografia parcial a qualquer momento (${data.answered}/${data.total})`
+        }
+        cta={completo ? 'Revelar minha fotografia' : 'Ver fotografia parcial'}
+        rota="/fotografia"
+      />
     </div>
   )
 }

@@ -11,8 +11,8 @@ import { ObjetivosPage } from '../features/journey/ObjetivosPage'
 import { TermometroPage } from '../features/journey/TermometroPage'
 import { FotografiaPage } from '../features/journey/FotografiaPage'
 import { AssinaturaPage } from '../features/paid/AssinaturaPage'
-import { PriorizacaoPage } from '../features/paid/PriorizacaoPage'
 import { RodadaPage } from '../features/paid/RodadaPage'
+import { ConquistasPage } from '../features/paid/ConquistasPage'
 import { CmsListPage } from '../features/cms/CmsListPage'
 import { CmsVersionPage } from '../features/cms/CmsVersionPage'
 import { Layout } from './Layout'
@@ -54,8 +54,10 @@ export function AppRoutes() {
         <Route path="/fotografia" element={<FotografiaPage />} />
         <Route path="/processos" element={<ProcessosPage />} />
         <Route path="/processos/:id" element={<ProcessoDetailPage />} />
-        <Route path="/priorizacao" element={<PriorizacaoPage />} />
+        {/* Tela unificada (2026-07-24): /priorizacao fundiu-se em /processos */}
+        <Route path="/priorizacao" element={<Navigate to="/processos" replace />} />
         <Route path="/rodada" element={<RodadaPage />} />
+        <Route path="/conquistas" element={<ConquistasPage />} />
         <Route path="/assinatura" element={<AssinaturaPage />} />
         <Route
           path="/cms"

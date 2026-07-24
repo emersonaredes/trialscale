@@ -4,6 +4,7 @@ import { paidApi } from './api'
 import { authApi } from '../auth/api/auth-api'
 import { useAuth } from '../auth/hooks/use-auth'
 import { setAccessToken } from '../../shared/lib/api-client'
+import { ProximoPasso } from '../../shared/components/ProximoPasso'
 
 function formatarValor(amount: string): string {
   return Number(amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -83,6 +84,14 @@ export function AssinaturaPage() {
       {!admin && (
         <p className="apoio">Somente o administrador do centro pode alterar o plano.</p>
       )}
+      {data?.myPlan && (
+        <ProximoPasso
+          titulo="Seu plano está ativo — veja seus processos priorizados e comece a trilha"
+          cta="Ver processos"
+          rota="/processos"
+        />
+      )}
+
       {admin && data?.myPlan && (
         <div>
           <button className="destrutivo pequeno" onClick={() => cancelar.mutate()}>

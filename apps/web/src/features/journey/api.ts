@@ -22,15 +22,29 @@ export interface ThermometerProcess {
   published: boolean
 }
 
+export interface PhotoProcess extends ThermometerProcess {
+  relevance: number // 0–5 (relevância estratégica normalizada)
+  objectiveIds: number[]
+}
+
+export interface PhotoObjective {
+  objectiveId: number
+  name: string
+  rank: number
+  processIds: number[]
+  averagePain: number | null
+}
+
 export interface Photo {
   groups: Array<{
     group: string
-    processes: ThermometerProcess[]
+    processes: PhotoProcess[]
     answered: number
     total: number
     averagePain: number | null
   }>
-  topPains: ThermometerProcess[]
+  topPains: PhotoProcess[]
+  objectives: PhotoObjective[]
   answered: number
   total: number
 }

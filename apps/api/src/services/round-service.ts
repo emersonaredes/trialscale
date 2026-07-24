@@ -83,6 +83,9 @@ export const roundService = {
       const process = await contentRepository.findProcessById(processId)
       const m = await maturityService.computeProcess(processId)
       const baseline = (rp.get('baseline_level') as number | null) ?? 1
+      // Tarefas do kanban deste processo: artefatos até o PRÓXIMO nível
+      const alvo = Math.min(m.level + 1, 5)
+      const tarefas = m.artifacts.filter((a) => a.level <= alvo)
       processes.push({
         processId,
         code: process?.get('code') as string | null,
@@ -91,6 +94,10 @@ export const roundService = {
         currentLevel: m.level,
         leveledUp: m.level > baseline,
         nextLevelMissing: m.nextLevelMissing,
+        essentialsTotal: m.essentialsTotal,
+        essentialsComplete: m.essentialsComplete,
+        artifactsTotal: tarefas.length,
+        artifactsComplete: tarefas.filter((a) => a.state === 'completo').length,
       })
     }
 

@@ -18,6 +18,9 @@ export interface PriorityItem {
   score: number
   unlocks: number
   level: number | null
+  essentialsTotal: number | null
+  essentialsComplete: number | null
+  nextLevelMissing: number | null
   silentRisk: boolean
   suggested: boolean
 }
@@ -36,6 +39,10 @@ export interface RoundInfo {
     currentLevel: number
     leveledUp: boolean
     nextLevelMissing: number
+    essentialsTotal: number
+    essentialsComplete: number
+    artifactsTotal: number
+    artifactsComplete: number
   }>
   canConclude: boolean
 }
