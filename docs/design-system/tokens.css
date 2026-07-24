@@ -1,4 +1,4 @@
-/* TrialScale Design System — tokens v1.1 */
+/* TrialScale Design System — tokens v2 densa */
 :root {
   /* Azul Trial */
   --ts-blue-50:#EAF7FC; --ts-blue-100:#D2EEF8; --ts-blue-200:#A5DCF0; --ts-blue-400:#4FB3DC;
@@ -14,20 +14,21 @@
   /* Semânticas */
   --ts-success:#17B583; --ts-warning:#F5A623; --ts-danger:#D6493C; --ts-danger-bg:#FDF0EE; --ts-info:#219EC9;
   /* Níveis de maturidade (escala C) */
-  --ts-nivel-1:#C3CCD3; --ts-nivel-2:#F26B4E; --ts-nivel-3:#F5A623; --ts-nivel-4:#219EC9; --ts-nivel-5:#17B583;
-  --ts-nivel-3-text:#4A3000;
+  --ts-nivel-1:#0F81AC; --ts-nivel-2:#219EC9; --ts-nivel-3:#4CCBA0; --ts-nivel-4:#17B583; --ts-nivel-5:#F5A623;
+  --ts-nivel-3-text:#0A3A4E; --ts-nivel-5-text:#4A3000;
   /* Gradientes */
   --ts-grad-brand:linear-gradient(90deg,#0F81AC,#17B583);
   --ts-grad-celebracao:linear-gradient(90deg,#F5A623,#F26B4E);
   --ts-grad-card-destaque:linear-gradient(135deg,#0A3A4E,#0F81AC);
   /* Tipografia */
+  --ts-font-logo:'Bricolage Grotesque',sans-serif;
   --ts-font-display:'Sora',sans-serif;
   --ts-font-body:'Public Sans',sans-serif;
   --ts-font-mono:'IBM Plex Mono',monospace;
   /* Espaço (base 4px) */
   --ts-space-xs:4px; --ts-space-sm:8px; --ts-space-md:16px; --ts-space-lg:24px; --ts-space-xl:32px; --ts-space-2xl:48px;
   /* Raio */
-  --ts-radius-input:8px; --ts-radius-btn:10px; --ts-radius-card:14px; --ts-radius-modal:20px; --ts-radius-pill:999px;
+  --ts-radius-input:6px; --ts-radius-btn:8px; --ts-radius-card:10px; --ts-radius-modal:14px; --ts-radius-pill:999px;
   /* Sombras */
   --ts-shadow-1:0 1px 3px rgba(10,58,78,.10);
   --ts-shadow-2:0 4px 14px rgba(10,58,78,.14);

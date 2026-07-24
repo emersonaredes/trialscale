@@ -10,6 +10,9 @@ import { ProcessoDetailPage } from '../features/processes/ProcessoDetailPage'
 import { ObjetivosPage } from '../features/journey/ObjetivosPage'
 import { TermometroPage } from '../features/journey/TermometroPage'
 import { FotografiaPage } from '../features/journey/FotografiaPage'
+import { AssinaturaPage } from '../features/paid/AssinaturaPage'
+import { PriorizacaoPage } from '../features/paid/PriorizacaoPage'
+import { RodadaPage } from '../features/paid/RodadaPage'
 import { CmsListPage } from '../features/cms/CmsListPage'
 import { CmsVersionPage } from '../features/cms/CmsVersionPage'
 import { Layout } from './Layout'
@@ -51,6 +54,9 @@ export function AppRoutes() {
         <Route path="/fotografia" element={<FotografiaPage />} />
         <Route path="/processos" element={<ProcessosPage />} />
         <Route path="/processos/:id" element={<ProcessoDetailPage />} />
+        <Route path="/priorizacao" element={<PriorizacaoPage />} />
+        <Route path="/rodada" element={<RodadaPage />} />
+        <Route path="/assinatura" element={<AssinaturaPage />} />
         <Route
           path="/cms"
           element={

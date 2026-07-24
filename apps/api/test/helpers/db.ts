@@ -2,6 +2,10 @@ import { sequelize } from '../../src/db/sequelize'
 
 /** Tabelas de DADOS truncadas entre testes (lookups seedados são preservados). */
 const DATA_TABLES = [
+  // Jornada paga (Etapa 3) — process_dependency já está na lista da Fatia 1
+  'round_process',
+  'round',
+  'objective_process_weight',
   // Jornada (Fatia 2)
   'pain_score',
   'tenant_objective',

@@ -13,6 +13,7 @@ import { tokenService } from './token-service'
 import { auditService } from './audit-service'
 import { ConflictError, UnauthorizedError, ValidationFailedError } from '../errors/domain-errors'
 import { env } from '../config/env'
+import { planRepository } from '../repositories/paid-journey-repository'
 import type { TipoInstituicao, ProtocolosFaixa } from '../types/domain'
 
 export interface RegisterInput {
@@ -30,16 +31,36 @@ export interface RegisterInput {
   consent: { version: string; accepted: true }
 }
 
+export interface TenantSessionInfo {
+  id: number
+  name: string
+  planCode: string | null // null = gratuito (gating — Etapa 3)
+}
+
 export interface SessionResult {
   accessToken: string
   refreshToken: string // opaco — vai para cookie httpOnly no controller
   user: { id: number; name: string; email: string }
-  tenant: { id: number; name: string } | null
+  tenant: TenantSessionInfo | null
   role: Role | null
   isStaff: boolean
 }
 
 const CONSENT_TEXT_REF = 'consent/lgpd' // versionado pelo campo consent_version
+
+/** Info do centro para a sessão, incluindo o plano (gating do freemium). */
+async function tenantSessionInfo(tenantId: number): Promise<TenantSessionInfo | null> {
+  const tenant = await identityRepository.findTenantById(tenantId)
+  if (!tenant) return null
+  const planId = tenant.get('plan_id') as number | null
+  let planCode: string | null = null
+  if (planId != null) {
+    const plans = await planRepository.listAll()
+    const plan = plans.find((p) => (p.get('id') as number) === planId)
+    planCode = plan ? (plan.get('code') as string) : null
+  }
+  return { id: tenantId, name: tenant.get('name') as string, planCode }
+}
 
 async function issueSession(
   userId: number,
@@ -146,7 +167,7 @@ export const authService = {
 
     let tenantId: number | null = null
     let role: Role | null = null
-    let tenantInfo: { id: number; name: string } | null = null
+    let tenantInfo: TenantSessionInfo | null = null
 
     if (!isStaff) {
       const memberships = await identityRepository.findMembershipsByUser(userId)
@@ -154,8 +175,7 @@ export const authService = {
       if (!first) throw new UnauthorizedError()
       tenantId = first.get('tenant_id') as number
       role = first.get('role') as Role
-      const tenant = await identityRepository.findTenantById(tenantId)
-      tenantInfo = tenant ? { id: tenantId, name: tenant.get('name') as string } : null
+      tenantInfo = await tenantSessionInfo(tenantId)
     }
 
     const session = await issueSession(userId, tenantId, role, isStaff)
@@ -200,7 +220,7 @@ export const authService = {
 
     // Banco vence token: revalida membership/role a cada rotação.
     let role: Role | null = null
-    let tenantInfo: { id: number; name: string } | null = null
+    let tenantInfo: TenantSessionInfo | null = null
     if (!isStaff) {
       if (tenantId == null) throw new UnauthorizedError('Sessão inválida.')
       const membership = await identityRepository.findMembership(userId, tenantId)
@@ -209,8 +229,7 @@ export const authService = {
         throw new UnauthorizedError('Sessão inválida.')
       }
       role = membership.get('role') as Role
-      const tenant = await identityRepository.findTenantById(tenantId)
-      tenantInfo = tenant ? { id: tenantId, name: tenant.get('name') as string } : null
+      tenantInfo = await tenantSessionInfo(tenantId)
     }
 
     // Rotação: novo token na MESMA família; o antigo é revogado e aponta o elo.
@@ -291,10 +310,9 @@ export const authService = {
     if (!ctx || ctx.userId == null) throw new UnauthorizedError()
     const user = await identityRepository.findUserById(ctx.userId)
     if (!user) throw new UnauthorizedError()
-    let tenantInfo: { id: number; name: string } | null = null
+    let tenantInfo: TenantSessionInfo | null = null
     if (ctx.tenantId != null) {
-      const tenant = await identityRepository.findTenantById(ctx.tenantId)
-      tenantInfo = tenant ? { id: ctx.tenantId, name: tenant.get('name') as string } : null
+      tenantInfo = await tenantSessionInfo(ctx.tenantId)
     }
     return {
       user: {

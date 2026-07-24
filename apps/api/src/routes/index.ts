@@ -6,9 +6,11 @@ import { miscController } from '../controllers/misc-controller'
 import { cmsController } from '../controllers/cms-controller'
 import { maturityController } from '../controllers/maturity-controller'
 import { journeyController } from '../controllers/journey-controller'
+import { paidJourneyController } from '../controllers/paid-journey-controller'
 import { authenticate } from '../middlewares/authenticate'
 import { requireStaff } from '../middlewares/require-staff'
 import { requireRole } from '../middlewares/require-role'
+import { requirePaidPlan } from '../middlewares/require-plan'
 import { validate } from '../middlewares/validate'
 import {
   registerSchema,
@@ -24,6 +26,7 @@ import {
   applicabilitySchema,
 } from '../dtos/content-dtos'
 import { saveObjectivesSchema, scorePainSchema } from '../dtos/journey-dtos'
+import { subscribeSchema, createRoundSchema } from '../dtos/paid-journey-dtos'
 import { isTest } from '../config/env'
 
 export const routes = Router()
@@ -58,22 +61,57 @@ routes.post('/auth/reset-password', validate(resetPasswordSchema), authControlle
 routes.get('/me', authenticate, authController.me)
 
 // ---- Centro: catálogo publicado + Raio-X (Fatia 1) ----
-routes.get('/processes', authenticate, maturityController.overview)
-routes.get('/processes/:id', authenticate, maturityController.processDetail)
+// GATING (Etapa 3): Raio-X/níveis fazem parte da jornada PAGA (concepção §6).
+routes.get('/processes', authenticate, requirePaidPlan, maturityController.overview)
+routes.get('/processes/:id', authenticate, requirePaidPlan, maturityController.processDetail)
 routes.put(
   '/assessments/:artifactId',
   authenticate,
+  requirePaidPlan,
   validate(markAssessmentSchema),
   maturityController.markAssessment,
 )
 routes.put(
   '/processes/:id/applicability',
   authenticate,
+  requirePaidPlan,
   requireRole('administrador', 'coordenador'),
   validate(applicabilitySchema),
   maturityController.setApplicability,
 )
-routes.get('/templates/:id/download', authenticate, maturityController.downloadTemplate)
+routes.get('/templates/:id/download', authenticate, requirePaidPlan, maturityController.downloadTemplate)
+
+// ---- Billing (assinatura SIMULADA — Etapa 5 traz o gateway) ----
+routes.get('/plans', authenticate, paidJourneyController.listPlans)
+routes.post(
+  '/billing/subscribe',
+  authenticate,
+  requireRole('administrador'),
+  validate(subscribeSchema),
+  paidJourneyController.subscribe,
+)
+routes.post('/billing/cancel', authenticate, requireRole('administrador'), paidJourneyController.cancel)
+
+// ---- Jornada paga: priorização e rodadas (Etapa 3) ----
+routes.get('/priorities', authenticate, requirePaidPlan, paidJourneyController.priorities)
+routes.get('/rounds/current', authenticate, requirePaidPlan, paidJourneyController.currentRound)
+routes.get('/rounds/suggestion', authenticate, requirePaidPlan, paidJourneyController.suggestRound)
+routes.post(
+  '/rounds',
+  authenticate,
+  requirePaidPlan,
+  requireRole('administrador', 'coordenador'),
+  validate(createRoundSchema),
+  paidJourneyController.createRound,
+)
+routes.get('/rounds/current/kanban', authenticate, requirePaidPlan, paidJourneyController.kanban)
+routes.post(
+  '/rounds/current/conclude',
+  authenticate,
+  requirePaidPlan,
+  requireRole('administrador', 'coordenador'),
+  paidJourneyController.concludeRound,
+)
 
 // ---- Jornada gratuita (Fatia 2): objetivos, termômetro, fotografia ----
 routes.get('/objectives', authenticate, journeyController.listObjectives)

@@ -55,7 +55,7 @@ export default tseslint.config(
         'error',
         {
           selector:
-            "CallExpression[callee.property.name=/^(sum|min|max|aggregate|increment|decrement|upsert)$/][callee.object.name=/Model$|^[A-Z]/]",
+            "CallExpression[callee.property.name=/^(sum|min|max|aggregate|increment|decrement|upsert)$/][callee.object.name=/^(?!Math$|Number$|Promise$|Object$|JSON$)[A-Z]/]",
           message:
             'Agregações/increment/upsert direto no model não passam pelos hooks de tenant (ADR 001). Use métodos do repository.',
         },

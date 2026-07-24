@@ -13,7 +13,13 @@ const ROTULO_PAPEL: Record<string, string> = {
 
 export function HomePage() {
   const { session } = useAuth()
-  const { data } = useQuery({ queryKey: ['overview'], queryFn: processesApi.overview })
+  const pago = session?.isStaff || session?.tenant?.planCode != null
+  const { data } = useQuery({
+    queryKey: ['overview'],
+    queryFn: processesApi.overview,
+    retry: false,
+    enabled: pago, // gratuito não tem Raio-X — evita 403 no boot
+  })
   const { data: termometro } = useQuery({ queryKey: ['thermometer'], queryFn: journeyApi.thermometer })
   const { data: meusObjetivos } = useQuery({ queryKey: ['my-objectives'], queryFn: journeyApi.myObjectives })
 
@@ -72,30 +78,48 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="cartao">
-        <h2>Sua maturidade</h2>
-        {aplicaveis.length > 0 ? (
-          <>
-            <p className="apoio">
-              {aplicaveis.length} processos publicados · {noTopo} no nível Otimizado
-            </p>
-            <div className="linha-acoes" style={{ marginBottom: 12 }}>
-              {aplicaveis.slice(0, 6).map((p) => (
-                <Link key={p.processId} to={`/processos/${p.processId}`} title={p.name}>
-                  <LevelBadge level={p.level} />
+      {pago ? (
+        <section className="cartao">
+          <h2>Sua maturidade</h2>
+          {aplicaveis.length > 0 ? (
+            <>
+              <p className="apoio">
+                {aplicaveis.length} processos publicados · {noTopo} no nível Otimizado
+              </p>
+              <div className="linha-acoes" style={{ marginBottom: 10 }}>
+                {aplicaveis.slice(0, 6).map((p) => (
+                  <Link key={p.processId} to={`/processos/${p.processId}`} title={p.name}>
+                    <LevelBadge level={p.level} />
+                  </Link>
+                ))}
+              </div>
+              <div className="linha-acoes">
+                <Link to="/rodada">
+                  <button>Minha rodada</button>
                 </Link>
-              ))}
-            </div>
-            <Link to="/processos">
-              <button>Abrir meus processos</button>
-            </Link>
-          </>
-        ) : (
+                <Link to="/processos">
+                  <button className="secundario">Todos os processos</button>
+                </Link>
+              </div>
+            </>
+          ) : (
+            <p className="apoio">
+              Assim que a equipe TrialScale publicar conteúdo, seus processos aparecem aqui.
+            </p>
+          )}
+        </section>
+      ) : (
+        <section className="cartao">
+          <h2>Pronto para a trilha? 🧗</h2>
           <p className="apoio">
-            Assim que a equipe TrialScale publicar conteúdo, seus processos aparecem aqui.
+            O plano pago abre o Raio-X de artefatos, os níveis de maturidade, a priorização e as
+            rodadas de melhoria — o caminho para as dores da sua fotografia diminuírem.
           </p>
-        )}
-      </section>
+          <Link to="/assinatura">
+            <button>Conhecer os planos</button>
+          </Link>
+        </section>
+      )}
 
       <section className="cartao">
         <h2>Como funciona</h2>

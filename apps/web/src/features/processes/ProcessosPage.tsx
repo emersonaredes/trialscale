@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { processesApi } from './api'
 import { LevelBadge } from '../../shared/components/badges'
+import { Paywall, isPlanRequired } from '../../shared/components/Paywall'
 
 const GRUPO: Record<string, string> = {
   central: 'Central',
@@ -10,8 +11,13 @@ const GRUPO: Record<string, string> = {
 }
 
 export function ProcessosPage() {
-  const { data, isLoading } = useQuery({ queryKey: ['overview'], queryFn: processesApi.overview })
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['overview'],
+    queryFn: processesApi.overview,
+    retry: false,
+  })
 
+  if (isPlanRequired(error)) return <Paywall />
   if (isLoading) return <p className="carregando">Carregando seus processos…</p>
 
   const processos = data?.processes ?? []
