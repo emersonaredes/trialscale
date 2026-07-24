@@ -384,6 +384,16 @@ tbody td {
 tbody tr:hover {
   background: rgba(234, 247, 252, 0.4);
 }
+th.ordenavel {
+  cursor: pointer;
+  user-select: none;
+}
+th.ordenavel:hover {
+  color: var(--azul-600);
+}
+th.ordenavel .seta {
+  color: var(--azul-600);
+}
 /* Risco silencioso: dor baixa + maturidade baixa (o que você não vê chegando) */
 tr.risco-silencioso {
   background: rgba(254, 243, 220, 0.33);

@@ -18,6 +18,9 @@ export interface PriorityItem {
   score: number
   unlocks: number
   level: number | null
+  essentialsTotal: number | null
+  essentialsComplete: number | null
+  nextLevelMissing: number | null
   silentRisk: boolean
   suggested: boolean
 }

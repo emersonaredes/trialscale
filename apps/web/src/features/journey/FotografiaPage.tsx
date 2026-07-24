@@ -132,8 +132,8 @@ export function FotografiaPage() {
       )}
 
       <ProximoPasso
-        titulo="Abrir o Raio-X das suas 3 maiores dores e transformá-las em plano"
-        cta={pago ? 'Abrir Raio-X' : 'Conhecer os planos'}
+        titulo="Veja seus processos priorizados e transforme as maiores dores em plano"
+        cta={pago ? 'Ver meus processos' : 'Conhecer os planos'}
         rota={pago ? '/processos' : '/assinatura'}
       />
     </div>

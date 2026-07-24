@@ -86,8 +86,8 @@ export function AssinaturaPage() {
       )}
       {data?.myPlan && (
         <ProximoPasso
-          titulo="Seu plano está ativo — abra o Raio-X e comece a trilha das suas maiores dores"
-          cta="Abrir o Raio-X"
+          titulo="Seu plano está ativo — veja seus processos priorizados e comece a trilha"
+          cta="Ver processos"
           rota="/processos"
         />
       )}

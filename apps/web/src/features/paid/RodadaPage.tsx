@@ -85,8 +85,8 @@ function NovaRodada({ podeGerir }: { podeGerir: boolean }) {
       <div>
         <h1>Monte a sua rodada</h1>
         <p className="apoio">
-          Foco vence volume: escolha <b>3 ou 4 processos</b> para melhorar agora. A sugestão vem da
-          sua <Link to="/priorizacao">priorização</Link> — ajuste à vontade.
+          Foco vence volume: escolha <b>3 ou 4 processos</b> para melhorar agora. A sugestão vem
+          dos seus <Link to="/processos">processos priorizados</Link> — ajuste à vontade.
         </p>
       </div>
 

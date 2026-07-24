@@ -13,8 +13,8 @@ export interface Passo {
   meta: string
 }
 
-/** Estado da jornada sequencial (proposta v3): Objetivos → Termômetro →
- *  Fotografia → Raio-X → Priorização → Rodada. Calculado dos mesmos dados
+/** Estado da jornada sequencial (v3, unificada em 2026-07-24): Objetivos →
+ *  Termômetro → Fotografia → Processos → Rodada. Calculado dos mesmos dados
  *  já buscados (cacheados pelo react-query). */
 export function useJourneySteps(): { passos: Passo[]; pago: boolean; progresso: number } {
   const { session } = useAuth()
@@ -68,21 +68,16 @@ export function useJourneySteps(): { passos: Passo[]; pago: boolean; progresso: 
       meta: termometroOk ? 'pronta para revelar' : 'parcial',
     },
     {
+      // Tela unificada (2026-07-24): a antiga lista Raio-X fundiu-se aqui;
+      // o Raio-X de marcação vive no detalhe de cada processo.
       n: 4,
-      nome: 'Raio-X',
+      nome: 'Processos',
       rota: '/processos',
       estado: pago ? 'aberto' : 'bloqueado',
-      meta: pago ? 'artefatos por nível' : 'jornada paga',
+      meta: pago ? 'dor × estratégia × nível' : 'jornada paga',
     },
     {
       n: 5,
-      nome: 'Priorização',
-      rota: '/priorizacao',
-      estado: !pago ? 'bloqueado' : termometroOk ? 'aberto' : 'bloqueado',
-      meta: !pago ? 'jornada paga' : termometroOk ? 'dor × estratégia' : 'complete o termômetro',
-    },
-    {
-      n: 6,
       nome: 'Rodada',
       rota: '/rodada',
       estado: pago ? 'aberto' : 'bloqueado',

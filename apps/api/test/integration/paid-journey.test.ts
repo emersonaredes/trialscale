@@ -105,6 +105,10 @@ describe('priorização', () => {
       expect(i1.score).toBe(60) // painNorm 1 → 0.6
       expect(i2.score).toBe(70) // painNorm 0.5*0.6 + rel 1*0.4 = 0.70
       expect(i2.relevance).toBe(100)
+      // Tela unificada "Processos": essenciais no payload (publicado → números)
+      expect(i1.essentialsTotal).toBe(2)
+      expect(i1.essentialsComplete).toBe(0)
+      expect(i1.nextLevelMissing).toBe(1)
       expect(i3.silentRisk).toBe(true)
       expect(i1.silentRisk).toBe(false)
       // ordenação: maior score primeiro

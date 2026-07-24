@@ -73,8 +73,8 @@ export function HomePage() {
     }
     return {
       eyebrow: 'Fotografia revelada',
-      titulo: 'Abra o Raio-X das suas maiores dores e monte a primeira rodada.',
-      cta: 'Abrir o Raio-X',
+      titulo: 'Veja seus processos priorizados e monte a primeira rodada.',
+      cta: 'Ver processos',
       rota: '/processos',
     }
   })()

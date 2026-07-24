@@ -28,6 +28,9 @@ export interface PriorityItem {
   score: number // 0-100
   unlocks: number
   level: number | null
+  essentialsTotal: number | null // null = sem conteúdo publicado
+  essentialsComplete: number | null
+  nextLevelMissing: number | null
   silentRisk: boolean
   suggested: boolean
 }
@@ -36,8 +39,7 @@ export const priorityService = {
   async computePriorities(): Promise<{ items: PriorityItem[]; answeredPain: number; hasObjectives: boolean }> {
     const { processes: termometro, answered } = await journeyService.getThermometer()
     const overview = await maturityService.computeOverview()
-    const levelByProcess = new Map(overview.processes.map((p) => [p.processId, p.level]))
-    const appliesByProcess = new Map(overview.processes.map((p) => [p.processId, p.applies]))
+    const overviewByProcess = new Map(overview.processes.map((p) => [p.processId, p]))
 
     // Relevância estratégica: peso(obj→proc) × fator do rank do objetivo
     const meusObjetivos = await tenantObjectiveRepository.listOrdered()
@@ -70,8 +72,9 @@ export const priorityService = {
       const pain = p.score
       const painNorm = pain != null ? (pain - 1) / 4 : 0
       const relNorm = maxRelevance > 0 ? (relevanceRaw.get(p.processId) ?? 0) / maxRelevance : 0
-      const level = levelByProcess.get(p.processId) ?? null
-      const applies = appliesByProcess.get(p.processId) ?? true
+      const ov = overviewByProcess.get(p.processId)
+      const level = ov?.level ?? null
+      const applies = ov?.applies ?? true
       return {
         processId: p.processId,
         code: p.code,
@@ -84,6 +87,9 @@ export const priorityService = {
         score: Math.round((0.6 * painNorm + 0.4 * relNorm) * 100),
         unlocks: unlocksByProcess.get(p.processId) ?? 0,
         level,
+        essentialsTotal: ov?.essentialsTotal ?? null,
+        essentialsComplete: ov?.essentialsComplete ?? null,
+        nextLevelMissing: ov?.nextLevelMissing ?? null,
         silentRisk:
           p.published && applies && pain != null && pain <= 2 && level != null && level <= 2,
         suggested: false,
