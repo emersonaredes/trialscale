@@ -41,6 +41,8 @@ export interface RoundInfo {
     nextLevelMissing: number
     essentialsTotal: number
     essentialsComplete: number
+    artifactsTotal: number
+    artifactsComplete: number
   }>
   canConclude: boolean
 }

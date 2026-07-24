@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { paidApi, type PriorityItem } from '../paid/api'
 import { LevelBadge } from '../../shared/components/badges'
 import { Paywall, isPlanRequired } from '../../shared/components/Paywall'
@@ -41,12 +41,39 @@ function valorParaOrdenar(item: PriorityItem, coluna: Coluna): number | null {
 }
 
 export function ProcessosPage() {
+  const navigate = useNavigate()
   const { data, error, isLoading } = useQuery({
     queryKey: ['priorities'],
     queryFn: paidApi.priorities,
     retry: false,
   })
+  const { data: rodada } = useQuery({
+    queryKey: ['round'],
+    queryFn: paidApi.currentRound,
+    retry: false,
+    enabled: !isPlanRequired(error),
+  })
   const [ordem, setOrdem] = useState<{ coluna: Coluna; desc: boolean }>({ coluna: 'score', desc: true })
+  const [selecionados, setSelecionados] = useState<number[]>([])
+
+  // Sem rodada aberta: seleção habilitada, com os SUGERIDOS pré-marcados.
+  const semRodadaAberta = rodada != null && rodada.round == null
+  useEffect(() => {
+    if (data && semRodadaAberta) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelecionados(data.items.filter((i) => i.suggested).map((i) => i.processId))
+    }
+  }, [data, semRodadaAberta])
+
+  const elegivel = (i: PriorityItem) => i.published && i.applies && (i.level ?? 1) < 5
+
+  function alternarSelecao(id: number) {
+    setSelecionados((atual) => {
+      if (atual.includes(id)) return atual.filter((x) => x !== id)
+      if (atual.length >= 4) return atual // rodada tem no máximo 4
+      return [...atual, id]
+    })
+  }
 
   const itens = useMemo(() => {
     const lista = [...(data?.items ?? [])]
@@ -85,9 +112,19 @@ export function ProcessosPage() {
             reordenar; clique no processo para abrir o Raio-X de artefatos.
           </p>
         </div>
-        <Link to="/rodada">
-          <button>Montar rodada com a sugestão</button>
-        </Link>
+        {semRodadaAberta ? (
+          <button
+            disabled={selecionados.length < 3}
+            title={selecionados.length < 3 ? 'Selecione 3 ou 4 processos' : undefined}
+            onClick={() => navigate('/rodada', { state: { processIds: selecionados } })}
+          >
+            Montar rodada ({selecionados.length}/4)
+          </button>
+        ) : (
+          <Link to="/rodada">
+            <button className="secundario">Ver rodada atual</button>
+          </Link>
+        )}
       </div>
 
       {!data.hasObjectives && (
@@ -106,6 +143,7 @@ export function ProcessosPage() {
         <table>
           <thead>
             <tr>
+              {semRodadaAberta && <th title="Selecione 3–4 processos para a rodada" style={{ width: 34 }}>✓</th>}
               {COLUNAS.map((c) => (
                 <th
                   key={c.chave}
@@ -123,6 +161,19 @@ export function ProcessosPage() {
           <tbody>
             {itens.map((item) => (
               <tr key={item.processId} className={item.silentRisk ? 'risco-silencioso' : ''}>
+                {semRodadaAberta && (
+                  <td>
+                    {elegivel(item) && (
+                      <input
+                        type="checkbox"
+                        checked={selecionados.includes(item.processId)}
+                        onChange={() => alternarSelecao(item.processId)}
+                        disabled={!selecionados.includes(item.processId) && selecionados.length >= 4}
+                        title={item.name}
+                      />
+                    )}
+                  </td>
+                )}
                 <td>
                   {item.published ? (
                     <Link to={`/processos/${item.processId}`}>

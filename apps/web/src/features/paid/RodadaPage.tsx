@@ -1,5 +1,5 @@
-import { useState, type DragEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState, type DragEvent } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { paidApi, type KanbanCard, type PriorityItem } from './api'
 import { processesApi } from '../processes/api'
@@ -54,6 +54,7 @@ export function RodadaPage() {
 // ---------------------------------------------------------------- nova rodada
 function NovaRodada({ podeGerir }: { podeGerir: boolean }) {
   const queryClient = useQueryClient()
+  const location = useLocation()
   const { data } = useQuery({ queryKey: ['priorities'], queryFn: paidApi.priorities, retry: false })
   const [selecionados, setSelecionados] = useState<number[] | null>(null)
   const [semanas, setSemanas] = useState<number | null>(null)
@@ -62,7 +63,10 @@ function NovaRodada({ podeGerir }: { podeGerir: boolean }) {
   const elegiveis: PriorityItem[] = (data?.items ?? []).filter(
     (i) => i.published && i.applies && (i.level ?? 1) < 5,
   )
-  const escolhidos = selecionados ?? elegiveis.filter((i) => i.suggested).map((i) => i.processId)
+  // Seleção pode chegar da tela Processos (checkboxes); senão, a sugestão.
+  const daNavegacao = (location.state as { processIds?: number[] } | null)?.processIds
+  const escolhidos =
+    selecionados ?? daNavegacao ?? elegiveis.filter((i) => i.suggested).map((i) => i.processId)
 
   function alternar(id: number) {
     setErro(null)
@@ -152,6 +156,24 @@ function RodadaAtiva({ podeGerir, aoConcluir }: { podeGerir: boolean; aoConcluir
   const [arrastando, setArrastando] = useState<KanbanCard | null>(null)
   const [colunaAlvo, setColunaAlvo] = useState<string | null>(null)
   const [erro, setErro] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+
+  // Toast de conquista: detecta SUBIDA de nível comparando com o snapshot
+  // anterior (celebra de verdade — DS: cor e movimento só na vitória).
+  const niveisAnteriores = useRef<Map<number, number>>(new Map())
+  useEffect(() => {
+    if (!data) return
+    for (const p of data.round.processes) {
+      const anterior = niveisAnteriores.current.get(p.processId)
+      if (anterior != null && p.currentLevel > anterior) {
+        setToast(`Aê! Nível ${p.currentLevel} em ${p.name} 🎉`)
+        const timer = setTimeout(() => setToast(null), 5000)
+        niveisAnteriores.current.set(p.processId, p.currentLevel)
+        return () => clearTimeout(timer)
+      }
+      niveisAnteriores.current.set(p.processId, p.currentLevel)
+    }
+  }, [data])
 
   const mover = useMutation({
     mutationFn: ({ card, estado }: { card: KanbanCard; estado: string }) =>
@@ -202,20 +224,30 @@ function RodadaAtiva({ podeGerir, aoConcluir }: { podeGerir: boolean; aoConcluir
         {round.processes.map((p) => (
           <div key={p.processId} className="artefato" style={{ alignItems: 'center' }}>
             <span className="mono" style={{ width: 30 }}>{p.code}</span>
-            <b style={{ color: 'var(--ink)', fontSize: 12.5, width: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.name}>
+            <Link
+              to={`/processos/${p.processId}`}
+              style={{ fontWeight: 700, fontSize: 12.5, width: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              title={`${p.name} — abrir o Raio-X`}
+            >
               {p.name}
-            </b>
+            </Link>
             <span style={{ opacity: 0.55 }}>
               <LevelBadge level={p.baselineLevel} />
             </span>
             <span className="apoio">→</span>
             <LevelBadge level={p.currentLevel} />
-            <div className="progresso" style={{ flex: 1, maxWidth: 160 }}>
-              <span
-                style={{
-                  width: `${p.essentialsTotal ? Math.round((100 * p.essentialsComplete) / p.essentialsTotal) : 0}%`,
-                }}
-              />
+            <div style={{ flex: 1, maxWidth: 190 }}>
+              <div className="apoio" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>artefatos {p.artifactsComplete}/{p.artifactsTotal}</span>
+                <span>{p.artifactsTotal - p.artifactsComplete} pendentes</span>
+              </div>
+              <div className={`progresso ${p.artifactsTotal > 0 && p.artifactsComplete / p.artifactsTotal >= 0.8 ? 'quase' : ''}`}>
+                <span
+                  style={{
+                    width: `${p.artifactsTotal ? Math.round((100 * p.artifactsComplete) / p.artifactsTotal) : 0}%`,
+                  }}
+                />
+              </div>
             </div>
             {p.leveledUp ? (
               <span style={{ color: 'var(--verde-700)', fontWeight: 700, fontSize: 12.5 }}>
@@ -260,7 +292,10 @@ function RodadaAtiva({ podeGerir, aoConcluir }: { podeGerir: boolean; aoConcluir
                 <b style={{ color: 'var(--ink)' }}>{card.title}</b>
                 <div className="meta">
                   <ClassMark classification={card.classification} />
-                  <span className="mono">{card.processCode}</span>
+                  <span className="apoio" title={card.processName}>
+                    <span className="mono">{card.processCode}</span>{' '}
+                    {card.processName.length > 28 ? `${card.processName.slice(0, 28)}…` : card.processName}
+                  </span>
                   <span className="apoio">N{card.level}</span>
                   {card.shared && <span className="tag-compartilhado">compartilhado</span>}
                   {card.expectedDueDate && (
@@ -279,6 +314,16 @@ function RodadaAtiva({ podeGerir, aoConcluir }: { podeGerir: boolean; aoConcluir
         cta="Ver conquistas"
         rota="/conquistas"
       />
+
+      {toast && (
+        <div className="toast" role="status">
+          <span className="icone">✓</span>
+          <span>
+            <b>{toast}</b>
+            <span className="sub">Só o essencial completo sobe o nível — e subiu.</span>
+          </span>
+        </div>
+      )}
     </>
   )
 }

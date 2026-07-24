@@ -69,6 +69,8 @@ export function FotografiaPage() {
           </div>
           <hr className="mediana-h" />
           <hr className="mediana-v" />
+          <span className="eixo eixo-x">Relevância estratégica →</span>
+          <span className="eixo eixo-y">Dor declarada →</span>
 
           {naMatriz.map((p) => (
             <span
