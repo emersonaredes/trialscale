@@ -2,6 +2,10 @@ import { sequelize } from '../../src/db/sequelize'
 
 /** Tabelas de DADOS truncadas entre testes (lookups seedados são preservados). */
 const DATA_TABLES = [
+  // Jornada (Fatia 2)
+  'pain_score',
+  'tenant_objective',
+  'objective',
   // Raio-X e catálogo (Fatia 1) — filhas primeiro
   'assessment',
   'process_applicability',

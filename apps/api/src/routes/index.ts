@@ -5,6 +5,7 @@ import { authController } from '../controllers/auth-controller'
 import { miscController } from '../controllers/misc-controller'
 import { cmsController } from '../controllers/cms-controller'
 import { maturityController } from '../controllers/maturity-controller'
+import { journeyController } from '../controllers/journey-controller'
 import { authenticate } from '../middlewares/authenticate'
 import { requireStaff } from '../middlewares/require-staff'
 import { requireRole } from '../middlewares/require-role'
@@ -22,6 +23,7 @@ import {
   markAssessmentSchema,
   applicabilitySchema,
 } from '../dtos/content-dtos'
+import { saveObjectivesSchema, scorePainSchema } from '../dtos/journey-dtos'
 import { isTest } from '../config/env'
 
 export const routes = Router()
@@ -72,6 +74,25 @@ routes.put(
   maturityController.setApplicability,
 )
 routes.get('/templates/:id/download', authenticate, maturityController.downloadTemplate)
+
+// ---- Jornada gratuita (Fatia 2): objetivos, termômetro, fotografia ----
+routes.get('/objectives', authenticate, journeyController.listObjectives)
+routes.get('/me/objectives', authenticate, journeyController.getMyObjectives)
+routes.put(
+  '/me/objectives',
+  authenticate,
+  requireRole('administrador', 'coordenador'),
+  validate(saveObjectivesSchema),
+  journeyController.saveMyObjectives,
+)
+routes.get('/thermometer', authenticate, journeyController.thermometer)
+routes.put(
+  '/thermometer/:processId',
+  authenticate,
+  validate(scorePainSchema),
+  journeyController.scorePain,
+)
+routes.get('/photo', authenticate, journeyController.photo)
 
 // ---- CMS (backoffice — SÓ staff; CA-8/CA-9) ----
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })

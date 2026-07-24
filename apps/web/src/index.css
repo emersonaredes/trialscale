@@ -483,6 +483,25 @@ tbody tr:hover {
   color: var(--secundario);
 }
 
+/* ---------- Lista priorizada (drag and drop) ---------- */
+.prioridade[draggable='true'] {
+  cursor: grab;
+}
+.prioridade.arrastando {
+  opacity: 0.4;
+}
+.prioridade.alvo-drop {
+  box-shadow: inset 0 3px 0 var(--azul-500);
+  background: var(--azul-50);
+}
+.alca-arrasto {
+  color: var(--secundario);
+  font-size: 14px;
+  letter-spacing: -2px;
+  user-select: none;
+  flex: none;
+}
+
 /* ---------- Detalhe do processo (Raio-X) ---------- */
 .artefato {
   display: flex;

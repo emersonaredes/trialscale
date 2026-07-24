@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../auth/hooks/use-auth'
 import { processesApi } from '../processes/api'
+import { journeyApi } from '../journey/api'
 import { LevelBadge } from '../../shared/components/badges'
 
 const ROTULO_PAPEL: Record<string, string> = {
@@ -13,9 +14,32 @@ const ROTULO_PAPEL: Record<string, string> = {
 export function HomePage() {
   const { session } = useAuth()
   const { data } = useQuery({ queryKey: ['overview'], queryFn: processesApi.overview })
+  const { data: termometro } = useQuery({ queryKey: ['thermometer'], queryFn: journeyApi.thermometer })
+  const { data: meusObjetivos } = useQuery({ queryKey: ['my-objectives'], queryFn: journeyApi.myObjectives })
 
   const aplicaveis = data?.processes.filter((p) => p.applies) ?? []
   const noTopo = aplicaveis.filter((p) => p.level === 5).length
+
+  const passos = [
+    {
+      rota: '/objetivos',
+      titulo: '1. Objetivos',
+      feito: (meusObjetivos?.length ?? 0) > 0,
+      detalhe: meusObjetivos?.length ? `${meusObjetivos.length} priorizados` : 'Defina aonde quer chegar',
+    },
+    {
+      rota: '/termometro',
+      titulo: '2. Termômetro',
+      feito: termometro != null && termometro.answered === termometro.total && termometro.total > 0,
+      detalhe: termometro ? `${termometro.answered}/${termometro.total} respondidos` : '—',
+    },
+    {
+      rota: '/fotografia',
+      titulo: '3. Fotografia',
+      feito: false,
+      detalhe: 'O retrato da sua dor',
+    },
+  ]
 
   return (
     <div className="pilha">
@@ -33,7 +57,23 @@ export function HomePage() {
       </div>
 
       <section className="cartao">
-        <h2>Sua jornada de maturidade</h2>
+        <h2>Sua jornada</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          {passos.map((p) => (
+            <Link key={p.rota} to={p.rota} style={{ textDecoration: 'none' }}>
+              <div className="cartao" style={{ padding: 14, borderColor: p.feito ? 'var(--verde-300)' : undefined }}>
+                <div style={{ fontWeight: 700, color: 'var(--ink)' }}>
+                  {p.titulo} {p.feito && '✓'}
+                </div>
+                <div className="apoio">{p.detalhe}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="cartao">
+        <h2>Sua maturidade</h2>
         {aplicaveis.length > 0 ? (
           <>
             <p className="apoio">
