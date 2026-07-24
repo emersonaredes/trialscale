@@ -200,6 +200,9 @@ function RodadaAtiva({ podeGerir, aoConcluir }: { podeGerir: boolean; aoConcluir
           {round.processes.map((p) => (
             <span key={p.processId} className="linha-acoes" style={{ gap: 5, marginRight: 14 }}>
               <span className="mono">{p.code}</span>
+              <b style={{ color: 'var(--ink)', fontSize: 12.5, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.name}>
+                {p.name}
+              </b>
               <LevelBadge level={p.baselineLevel} />
               <span className="apoio">→</span>
               <LevelBadge level={p.currentLevel} />

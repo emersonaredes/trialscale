@@ -608,6 +608,30 @@ tr.risco-silencioso {
   flex: none;
 }
 
+/* ---------- Chip de processo (nome + nível) ---------- */
+.chip-processo {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 3px 4px 3px 10px;
+}
+.chip-processo:hover {
+  border-color: var(--azul-200);
+  box-shadow: var(--sombra-1);
+}
+.chip-processo .nome {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ---------- Kanban da rodada ---------- */
 .kanban {
   display: grid;

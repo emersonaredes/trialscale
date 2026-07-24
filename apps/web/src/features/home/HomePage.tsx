@@ -88,8 +88,13 @@ export function HomePage() {
               </p>
               <div className="linha-acoes" style={{ marginBottom: 10 }}>
                 {aplicaveis.slice(0, 6).map((p) => (
-                  <Link key={p.processId} to={`/processos/${p.processId}`} title={p.name}>
-                    <LevelBadge level={p.level} />
+                  <Link key={p.processId} to={`/processos/${p.processId}`} title={p.name} style={{ textDecoration: 'none' }}>
+                    <span className="chip-processo">
+                      <span className="nome">
+                        {p.code && <span className="mono">{p.code}</span>} {p.name}
+                      </span>
+                      <LevelBadge level={p.level} />
+                    </span>
                   </Link>
                 ))}
               </div>
