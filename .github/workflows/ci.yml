@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: ci_root_pw
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -pci_root_pw"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_USER: root
+      DB_PASSWORD: ci_root_pw
+      DB_NAME: trialscale_dev
+      DB_NAME_TEST: trialscale_test
+      JWT_SECRET: ci-somente-um-segredo-de-teste-com-32+chars
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      # O env.ts lê o .env da raiz; no CI as variáveis vêm do ambiente,
+      # mas criamos um .env mínimo para os scripts que o exigem.
+      - name: Criar .env de CI
+        run: |
+          cat > .env << 'EOF'
+          DB_HOST=127.0.0.1
+          DB_PORT=3306
+          DB_USER=root
+          DB_PASSWORD=ci_root_pw
+          DB_NAME=trialscale_dev
+          DB_NAME_TEST=trialscale_test
+          JWT_SECRET=ci-somente-um-segredo-de-teste-com-32+chars
+          EOF
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Testes de unidade
+        run: npm run test:unit -w apps/api
+
+      - name: Testes de integração
+        run: npm run test:integration -w apps/api
+
+      # Step NOMEADO para virar required status check na branch protection:
+      # falha aqui = bloqueio de merge (constituição §1).
+      - name: tenant-isolation
+        run: npm run test:isolation -w apps/api
+
+      - name: Build
+        run: npm run build
