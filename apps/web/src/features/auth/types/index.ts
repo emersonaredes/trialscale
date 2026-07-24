@@ -1,7 +1,7 @@
 export interface Session {
   accessToken: string
   user: { id: number; name: string; email: string }
-  tenant: { id: number; name: string } | null
+  tenant: { id: number; name: string; planCode: string | null } | null
   role: 'administrador' | 'coordenador' | 'membro' | null
   isStaff: boolean
 }

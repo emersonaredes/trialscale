@@ -13,6 +13,7 @@
     "seed": "tsx src/db/seed-dev.ts",
     "seed:content": "tsx src/db/seed-content.ts",
     "seed:journey": "tsx src/db/seed-journey.ts",
+    "seed:priorities": "tsx src/db/seed-priorities.ts",
     "db:apply": "tsx src/db/apply-schema.ts"
   },
   "dependencies": {

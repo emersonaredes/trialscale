@@ -1,14 +1,19 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../features/auth/hooks/use-auth'
+import { LogoSymbol, Wordmark } from '../shared/components/Logo'
 
-/** Shell da área logada: sidebar azul-900 (design system) + conteúdo. */
+/** Shell da área logada: sidebar azul-900 (design system v2) + conteúdo. */
 export function Layout() {
   const { session, logout } = useAuth()
+  const pago = session?.isStaff || session?.tenant?.planCode != null
 
   return (
     <div className="shell">
       <aside className="sidebar">
-        <div className="logo">TrialScale</div>
+        <div className="logo">
+          <LogoSymbol dark />
+          <Wordmark />
+        </div>
         <NavLink to="/" end className={({ isActive }) => (isActive ? 'ativo' : '')}>
           Início
         </NavLink>
@@ -24,6 +29,17 @@ export function Layout() {
         <NavLink to="/processos" className={({ isActive }) => (isActive ? 'ativo' : '')}>
           Processos
         </NavLink>
+        <NavLink to="/priorizacao" className={({ isActive }) => (isActive ? 'ativo' : '')}>
+          Priorização
+        </NavLink>
+        <NavLink to="/rodada" className={({ isActive }) => (isActive ? 'ativo' : '')}>
+          Rodada
+        </NavLink>
+        {!session?.isStaff && (
+          <NavLink to="/assinatura" className={({ isActive }) => (isActive ? 'ativo' : '')}>
+            {pago ? 'Assinatura' : 'Assinar ✨'}
+          </NavLink>
+        )}
         {session?.isStaff && (
           <NavLink to="/cms" className={({ isActive }) => (isActive ? 'ativo' : '')}>
             CMS (backoffice)

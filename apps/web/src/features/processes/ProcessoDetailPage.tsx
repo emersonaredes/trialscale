@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { processesApi, type ArtifactStatus } from './api'
 import { LevelBadge, StatePill, SealBadge, ClassMark } from '../../shared/components/badges'
 import { apiDownload } from '../../shared/lib/api-client'
+import { Paywall, isPlanRequired } from '../../shared/components/Paywall'
 import { useAuth } from '../auth/hooks/use-auth'
 
 const PROXIMO_ESTADO: Record<string, ArtifactStatus['state']> = {
@@ -20,9 +21,10 @@ export function ProcessoDetailPage() {
   const [justificativa, setJustificativa] = useState('')
   const [dueDates, setDueDates] = useState<Record<number, string>>({})
 
-  const { data, isLoading } = useQuery({
+  const { data, error, isLoading } = useQuery({
     queryKey: ['processo', processId],
     queryFn: () => processesApi.detail(processId),
+    retry: false,
   })
 
   const recarregar = () => {
@@ -46,6 +48,7 @@ export function ProcessoDetailPage() {
     onSettled: recarregar,
   })
 
+  if (isPlanRequired(error)) return <Paywall />
   if (isLoading || !data) return <p className="carregando">Carregando o Raio-X…</p>
 
   const { process, levels, maturity } = data

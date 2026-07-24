@@ -1,6 +1,7 @@
 /* ============================================================
-   TrialScale — Design System v1.1 (docs/design-system/design-system.md)
-   Tokens + componentes base. Siga estritamente.
+   TrialScale — Design System v2 DENSA (docs/design-system/)
+   Tokens de docs/design-system/tokens.css. Siga estritamente.
+   Densidade alta (ref. ClickUp/monday): corpo 13px, paddings enxutos.
    ============================================================ */
 :root {
   /* Azul Trial */
@@ -36,14 +37,24 @@
   --atencao: #f5a623;
   --erro: #d6493c;
   --info: #219ec9;
-  /* Forma */
-  --raio-input: 8px;
-  --raio-botao: 10px;
-  --raio-card: 14px;
-  --raio-modal: 20px;
+  /* Níveis — escala "Rota da logo" (azul → verde → âmbar) */
+  --nivel-1: #0f81ac;
+  --nivel-2: #219ec9;
+  --nivel-3: #4ccba0;
+  --nivel-4: #17b583;
+  --nivel-5: #f5a623;
+  /* Forma (v2: raios menores) */
+  --raio-input: 6px;
+  --raio-botao: 8px;
+  --raio-card: 10px;
+  --raio-modal: 14px;
   --sombra-1: 0 1px 3px rgba(10, 58, 78, 0.1);
   --sombra-2: 0 4px 14px rgba(10, 58, 78, 0.14);
   --sombra-3: 0 12px 32px rgba(10, 58, 78, 0.2);
+  --overlay: rgba(10, 58, 78, 0.55);
+  --grad-celebracao: linear-gradient(90deg, #f5a623, #f26b4e);
+  --grad-marca: linear-gradient(90deg, #0f81ac, #17b583);
+  --fonte-logo: 'Bricolage Grotesque', sans-serif;
   --fonte-titulo: 'Sora', system-ui, sans-serif;
   --fonte-corpo: 'Public Sans', system-ui, sans-serif;
   --fonte-mono: 'IBM Plex Mono', ui-monospace, monospace;
@@ -56,8 +67,8 @@
 body {
   margin: 0;
   font-family: var(--fonte-corpo);
-  font-size: 14.5px;
-  line-height: 1.6;
+  font-size: 13px;
+  line-height: 1.5;
   background: var(--fundo);
   color: var(--corpo);
 }
@@ -67,27 +78,27 @@ h2,
 h3 {
   font-family: var(--fonte-titulo);
   color: var(--ink);
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 h1 {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
 }
 h2 {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
 }
 .display {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 .mono {
   font-family: var(--fonte-mono);
-  font-size: 12px;
+  font-size: 11px;
 }
 .apoio {
-  font-size: 12.5px;
+  font-size: 11.5px;
   color: var(--secundario);
 }
 
@@ -100,14 +111,14 @@ a:hover {
   text-decoration: underline;
 }
 
-/* ---------- Botões ---------- */
+/* ---------- Botões (v2: densos) ---------- */
 button,
 .botao {
   font-family: var(--fonte-corpo);
-  font-size: 14.5px;
+  font-size: 13px;
   font-weight: 600;
   border-radius: var(--raio-botao);
-  padding: 11px 20px;
+  padding: 7px 14px;
   border: 0;
   cursor: pointer;
   background: var(--azul-600);
@@ -132,7 +143,7 @@ button.secundario:hover:not(:disabled) {
 button.ghost {
   background: transparent;
   color: var(--azul-600);
-  padding: 8px 12px;
+  padding: 5px 8px;
 }
 button.ghost:hover:not(:disabled) {
   background: var(--azul-50);
@@ -143,6 +154,15 @@ button.completar {
 button.completar:hover:not(:disabled) {
   background: var(--verde-700);
 }
+button.celebracao {
+  background: var(--grad-celebracao);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(242, 107, 78, 0.35);
+}
+button.celebracao:hover:not(:disabled) {
+  background: var(--grad-celebracao);
+  filter: brightness(1.05);
+}
 button.destrutivo {
   background: transparent;
   border: 1.5px solid #ebb4ac;
@@ -152,16 +172,16 @@ button.destrutivo:hover:not(:disabled) {
   background: var(--coral-claro);
 }
 button.pequeno {
-  font-size: 13px;
-  padding: 8px 14px;
-  border-radius: 8px;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 6px;
 }
 
 /* ---------- Inputs ---------- */
 label {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   font-size: 13px;
   font-weight: 600;
   color: var(--ink);
@@ -170,10 +190,10 @@ input,
 select,
 textarea {
   font-family: var(--fonte-corpo);
-  font-size: 14px;
+  font-size: 13px;
   border: 1.5px solid var(--borda);
   border-radius: var(--raio-input);
-  padding: 10px 12px;
+  padding: 7px 10px;
   color: var(--corpo);
   background: var(--superficie);
 }
@@ -187,18 +207,18 @@ textarea:focus {
 label.checkbox {
   flex-direction: row;
   align-items: flex-start;
-  gap: 8px;
+  gap: 7px;
   font-weight: 400;
   color: var(--corpo);
 }
 .erro-msg,
 .erro {
   color: var(--erro);
-  font-size: 13px;
+  font-size: 12px;
   margin: 0;
 }
 .hint {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--secundario);
   font-weight: 400;
 }
@@ -208,14 +228,14 @@ label.checkbox {
   background: var(--superficie);
   border: 1px solid var(--borda);
   border-radius: var(--raio-card);
-  padding: 22px;
+  padding: 15px;
   box-shadow: var(--sombra-1);
 }
 .cartao:hover {
   box-shadow: var(--sombra-2);
 }
 .cartao-destaque {
-  background: linear-gradient(120deg, var(--azul-900), var(--azul-600));
+  background: linear-gradient(135deg, var(--azul-900), var(--azul-600));
   color: #fff;
   border: 0;
   position: relative;
@@ -233,8 +253,8 @@ label.checkbox {
   position: absolute;
   right: -30px;
   top: -30px;
-  width: 120px;
-  height: 120px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   background: rgba(245, 166, 35, 0.18);
 }
@@ -253,17 +273,17 @@ label.checkbox {
   background: var(--azul-500);
 }
 .progresso.quase > span {
-  background: linear-gradient(90deg, var(--azul-600), var(--verde-500));
+  background: var(--grad-marca);
 }
 
-/* ---------- Badge de nível (escala C — arco-íris da jornada) ---------- */
+/* ---------- Badge de nível — escala "Rota da logo" ---------- */
 .nivel {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   border-radius: 999px;
-  padding: 3px 12px;
-  font-size: 12.5px;
+  padding: 2px 10px;
+  font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -271,20 +291,20 @@ label.checkbox {
   font-family: var(--fonte-titulo);
   font-weight: 800;
 }
-.nivel-1 { background: #c3ccd3; color: var(--ink); }
-.nivel-2 { background: var(--coral); color: #fff; }
-.nivel-3 { background: var(--ambar); color: #4a3000; }
-.nivel-4 { background: var(--azul-500); color: #fff; }
-.nivel-5 { background: var(--verde-500); color: #fff; }
+.nivel-1 { background: var(--nivel-1); color: #fff; }
+.nivel-2 { background: var(--nivel-2); color: #fff; }
+.nivel-3 { background: var(--nivel-3); color: var(--azul-900); }
+.nivel-4 { background: var(--nivel-4); color: #fff; }
+.nivel-5 { background: var(--nivel-5); color: #4a3000; }
 
 /* ---------- Estados de artefato (kanban) ---------- */
 .estado {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 12.5px;
+  padding: 3px 10px;
+  font-size: 12px;
   font-weight: 600;
   border: 1px solid transparent;
   cursor: pointer;
@@ -319,7 +339,7 @@ label.checkbox {
 .selo {
   display: inline-block;
   border-radius: 6px;
-  padding: 2px 7px;
+  padding: 1px 6px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -329,7 +349,6 @@ label.checkbox {
 .selo-gcp { background: var(--azul-50); color: var(--azul-700); border: 1px solid var(--azul-200); }
 .selo-sugestao { background: var(--fundo); color: var(--secundario); border: 1px solid var(--borda); }
 
-/* Essencial × complementar */
 .marca-essencial,
 .marca-complementar {
   display: inline-block;
@@ -341,7 +360,7 @@ label.checkbox {
 .marca-essencial { background: var(--azul-600); }
 .marca-complementar { background: transparent; border: 2px solid var(--azul-200); }
 
-/* ---------- Tabela ---------- */
+/* ---------- Tabela (v2: densa) ---------- */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -349,51 +368,73 @@ table {
 }
 thead th {
   background: var(--fundo);
-  font-size: 11.5px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--secundario);
   font-weight: 700;
   text-align: left;
-  padding: 10px 18px;
+  padding: 8px 12px;
 }
 tbody td {
-  font-size: 13.5px;
-  padding: 13px 18px;
+  font-size: 12.5px;
+  padding: 8px 12px;
   border-top: 1px solid var(--divisor);
 }
 tbody tr:hover {
   background: rgba(234, 247, 252, 0.4);
 }
+/* Risco silencioso: dor baixa + maturidade baixa (o que você não vê chegando) */
+tr.risco-silencioso {
+  background: rgba(254, 243, 220, 0.33);
+}
+.tag-risco {
+  display: inline-block;
+  background: var(--ambar-claro);
+  border: 1px solid #f5c878;
+  color: #8a5e17;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
 
-/* ---------- Shell (sidebar + conteúdo) ---------- */
+/* ---------- Shell ---------- */
 .shell {
   display: flex;
   min-height: 100vh;
 }
 .sidebar {
-  width: 230px;
+  width: 210px;
   flex: none;
   background: var(--azul-900);
   color: #fff;
-  padding: 24px 16px;
+  padding: 18px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 .sidebar .logo {
-  font-family: var(--fonte-titulo);
-  font-weight: 800;
-  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 6px 18px;
+}
+.sidebar .logo .wordmark {
+  font-family: var(--fonte-logo);
+  font-weight: 700;
+  font-size: 17px;
   color: #fff;
-  margin-bottom: 24px;
-  padding: 0 10px;
+}
+.sidebar .logo .wordmark span {
+  color: #7acbe8;
 }
 .sidebar a {
   color: var(--azul-200);
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
   font-weight: 500;
+  font-size: 13px;
 }
 .sidebar a:hover {
   background: rgba(255, 255, 255, 0.08);
@@ -407,36 +448,29 @@ tbody tr:hover {
 .sidebar .rodape {
   margin-top: auto;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
-  padding-top: 14px;
-  font-size: 12.5px;
+  padding-top: 10px;
+  font-size: 11.5px;
   color: var(--azul-200);
 }
 .sidebar .rodape button {
-  margin-top: 8px;
+  margin-top: 6px;
   width: 100%;
 }
 .conteudo {
   flex: 1;
-  padding: 32px 40px;
-  max-width: 1100px;
+  padding: 22px 28px;
+  max-width: 1160px;
 }
 
 /* ---------- Auth ---------- */
-.auth-fundo {
-  min-height: 100vh;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 48px 16px;
-}
 .auth-card {
   width: 100%;
   max-width: 26rem;
-  margin: 48px auto;
+  margin: 40px auto;
   background: var(--superficie);
   border: 1px solid var(--borda);
   border-radius: var(--raio-card);
-  padding: 32px;
+  padding: 24px;
   box-shadow: var(--sombra-1);
 }
 .auth-card-larga {
@@ -446,41 +480,113 @@ tbody tr:hover {
 .auth-card fieldset {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 11px;
 }
 .auth-card fieldset {
   border: 1px solid var(--borda);
   border-radius: var(--raio-input);
 }
 .marca {
-  font-family: var(--fonte-titulo);
-  font-weight: 800;
-  font-size: 18px;
-  color: var(--azul-600);
+  font-family: var(--fonte-logo);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ink);
   margin: 0 0 2px;
+}
+.marca span {
+  color: var(--azul-600);
 }
 
 .linha {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 .linha > * {
   flex: 1;
 }
 .grade-especialidades {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-  gap: 6px;
-  max-height: 14rem;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 4px;
+  max-height: 13rem;
   overflow-y: auto;
   border: 1px solid var(--borda);
   border-radius: var(--raio-input);
-  padding: 10px;
+  padding: 8px;
 }
 .carregando {
   text-align: center;
-  margin-top: 64px;
+  margin-top: 56px;
   color: var(--secundario);
+}
+
+/* ---------- Raio-X / listas ---------- */
+.artefato {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 2px;
+  border-top: 1px solid var(--divisor);
+}
+.artefato .info {
+  flex: 1;
+}
+.artefato .titulo {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.artefato .dod {
+  font-size: 11.5px;
+  color: var(--secundario);
+  margin: 1px 0 0;
+}
+.tag-compartilhado {
+  font-size: 11px;
+  color: var(--azul-700);
+  background: var(--azul-50);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.secao-nivel {
+  margin-top: 14px;
+}
+.secao-nivel .cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+.aviso {
+  background: var(--ambar-claro);
+  border: 1px solid #f5c878;
+  border-radius: var(--raio-input);
+  padding: 8px 12px;
+  font-size: 12.5px;
+  color: #8a5e17;
+}
+.cabecalho-pagina {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.pilha {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.linha-acoes {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 /* ---------- Lista priorizada (drag and drop) ---------- */
@@ -496,77 +602,106 @@ tbody tr:hover {
 }
 .alca-arrasto {
   color: var(--secundario);
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: -2px;
   user-select: none;
   flex: none;
 }
 
-/* ---------- Detalhe do processo (Raio-X) ---------- */
-.artefato {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 13px 4px;
-  border-top: 1px solid var(--divisor);
+/* ---------- Kanban da rodada ---------- */
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  align-items: start;
 }
-.artefato .info {
+.kanban-coluna {
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-card);
+  padding: 8px;
+  min-height: 200px;
+}
+.kanban-coluna.alvo-drop {
+  border-color: var(--azul-500);
+  background: var(--azul-50);
+}
+.kanban-coluna h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--secundario);
+  margin: 2px 4px 8px;
+}
+.kanban-cartao {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  box-shadow: var(--sombra-1);
+  cursor: grab;
+  font-size: 12.5px;
+}
+.kanban-cartao.arrastando {
+  opacity: 0.4;
+}
+.kanban-cartao .meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Paywall / celebração ---------- */
+.paywall {
+  text-align: center;
+  padding: 36px 24px;
+}
+.overlay-celebracao {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.modal-celebracao {
+  background: var(--superficie);
+  border-radius: var(--raio-modal);
+  box-shadow: var(--sombra-3);
+  max-width: 30rem;
+  width: 100%;
+  overflow: hidden;
+}
+.modal-celebracao .topo {
+  background: var(--grad-marca);
+  color: #fff;
+  padding: 22px;
+  text-align: center;
+}
+.modal-celebracao .topo h2 {
+  color: #fff;
+  font-size: 20px;
+}
+.modal-celebracao .corpo {
+  padding: 18px 22px;
+}
+.plano-card {
+  border: 1.5px solid var(--borda);
+  border-radius: var(--raio-card);
+  padding: 16px;
   flex: 1;
 }
-.artefato .titulo {
-  font-weight: 600;
+.plano-card.atual {
+  border-color: var(--verde-300);
+  background: var(--verde-50);
+}
+.preco {
+  font-family: var(--fonte-titulo);
+  font-size: 22px;
+  font-weight: 800;
   color: var(--ink);
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.artefato .dod {
-  font-size: 12.5px;
-  color: var(--secundario);
-  margin: 2px 0 0;
-}
-.tag-compartilhado {
-  font-size: 11px;
-  color: var(--azul-700);
-  background: var(--azul-50);
-  border-radius: 999px;
-  padding: 1px 8px;
-}
-.secao-nivel {
-  margin-top: 20px;
-}
-.secao-nivel .cabecalho {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
-}
-.aviso {
-  background: var(--ambar-claro);
-  border: 1px solid #f5c878;
-  border-radius: var(--raio-input);
-  padding: 10px 14px;
-  font-size: 13px;
-  color: #8a5e17;
-}
-.cabecalho-pagina {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-.pilha {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.linha-acoes {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
 }

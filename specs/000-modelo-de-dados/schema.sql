@@ -471,10 +471,11 @@ CREATE TABLE IF NOT EXISTS `round` (
   COMMENT='Rodada de 3–4 processos que o centro escolhe melhorar.';
 
 CREATE TABLE IF NOT EXISTS `round_process` (
-  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `round_id`   BIGINT UNSIGNED NOT NULL,
-  `tenant_id`  BIGINT UNSIGNED NOT NULL,     -- ON-3: denormalizado p/ índice do kanban
-  `process_id` BIGINT UNSIGNED NOT NULL,
+  `id`             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `round_id`       BIGINT UNSIGNED NOT NULL,
+  `tenant_id`      BIGINT UNSIGNED NOT NULL,   -- ON-3: denormalizado p/ índice do kanban
+  `process_id`     BIGINT UNSIGNED NOT NULL,
+  `baseline_level` TINYINT UNSIGNED NULL,      -- nível de partida (conclusão = +1 em cada)
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_round_process` (`round_id`, `process_id`),
   KEY `ix_rp_tenant_process` (`tenant_id`, `process_id`),
@@ -515,6 +516,11 @@ INSERT IGNORE INTO `origin_seal` (`code`, `name`) VALUES
   ('A', 'Exigência de norma/ANVISA'),
   ('P', 'PIC (Plano de Implementação de Centros)'),
   ('D', 'Sugestão de design');
+
+-- Planos do MVP (valores de exemplo da concepção §6, a validar comercialmente)
+INSERT IGNORE INTO `plan` (`code`, `name`, `amount`) VALUES
+  ('autosservico', 'Autosserviço',           3870.00),
+  ('premium',      'Acompanhamento Premium', 7500.00);
 
 -- Condições de aplicabilidade de artefato (avaliação: ADR 002 / Q7 provisório)
 INSERT IGNORE INTO `applicability_condition` (`code`, `description`) VALUES
