@@ -7,6 +7,9 @@ import { ResetPasswordPage } from '../features/auth/components/ResetPasswordPage
 import { HomePage } from '../features/home/HomePage'
 import { ProcessosPage } from '../features/processes/ProcessosPage'
 import { ProcessoDetailPage } from '../features/processes/ProcessoDetailPage'
+import { ObjetivosPage } from '../features/journey/ObjetivosPage'
+import { TermometroPage } from '../features/journey/TermometroPage'
+import { FotografiaPage } from '../features/journey/FotografiaPage'
 import { CmsListPage } from '../features/cms/CmsListPage'
 import { CmsVersionPage } from '../features/cms/CmsVersionPage'
 import { Layout } from './Layout'
@@ -43,6 +46,9 @@ export function AppRoutes() {
         }
       >
         <Route path="/" element={<HomePage />} />
+        <Route path="/objetivos" element={<ObjetivosPage />} />
+        <Route path="/termometro" element={<TermometroPage />} />
+        <Route path="/fotografia" element={<FotografiaPage />} />
         <Route path="/processos" element={<ProcessosPage />} />
         <Route path="/processos/:id" element={<ProcessoDetailPage />} />
         <Route

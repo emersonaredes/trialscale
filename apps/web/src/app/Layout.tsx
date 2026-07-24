@@ -12,6 +12,15 @@ export function Layout() {
         <NavLink to="/" end className={({ isActive }) => (isActive ? 'ativo' : '')}>
           Início
         </NavLink>
+        <NavLink to="/objetivos" className={({ isActive }) => (isActive ? 'ativo' : '')}>
+          Objetivos
+        </NavLink>
+        <NavLink to="/termometro" className={({ isActive }) => (isActive ? 'ativo' : '')}>
+          Termômetro
+        </NavLink>
+        <NavLink to="/fotografia" className={({ isActive }) => (isActive ? 'ativo' : '')}>
+          Fotografia
+        </NavLink>
         <NavLink to="/processos" className={({ isActive }) => (isActive ? 'ativo' : '')}>
           Processos
         </NavLink>
