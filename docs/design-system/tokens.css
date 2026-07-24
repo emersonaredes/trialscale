@@ -1,0 +1,37 @@
+/* TrialScale Design System — tokens v1.1 */
+:root {
+  /* Azul Trial */
+  --ts-blue-50:#EAF7FC; --ts-blue-100:#D2EEF8; --ts-blue-200:#A5DCF0; --ts-blue-400:#4FB3DC;
+  --ts-blue-500:#219EC9; --ts-blue-600:#0F81AC; --ts-blue-700:#0D6689; --ts-blue-900:#0A3A4E;
+  /* Verde Ascensão */
+  --ts-green-50:#E8FBF3; --ts-green-100:#B9EFDB; --ts-green-300:#4CCBA0; --ts-green-500:#17B583; --ts-green-600:#0F9169;
+  /* Energia */
+  --ts-amber:#F5A623; --ts-amber-100:#FEF3DC; --ts-amber-border:#F5C878; --ts-amber-text:#8A5E17;
+  --ts-coral:#F26B4E; --ts-coral-100:#FDE7E1; --ts-coral-600:#E05B3D;
+  /* Neutros */
+  --ts-ink:#14242E; --ts-text:#3A4A54; --ts-text-2:#6B7B85; --ts-border:#DCE4E9;
+  --ts-bg:#F7FAFB; --ts-surface:#FFFFFF; --ts-divider:#EDF2F5; --ts-disabled:#8A99A3;
+  /* Semânticas */
+  --ts-success:#17B583; --ts-warning:#F5A623; --ts-danger:#D6493C; --ts-danger-bg:#FDF0EE; --ts-info:#219EC9;
+  /* Níveis de maturidade (escala C) */
+  --ts-nivel-1:#C3CCD3; --ts-nivel-2:#F26B4E; --ts-nivel-3:#F5A623; --ts-nivel-4:#219EC9; --ts-nivel-5:#17B583;
+  --ts-nivel-3-text:#4A3000;
+  /* Gradientes */
+  --ts-grad-brand:linear-gradient(90deg,#0F81AC,#17B583);
+  --ts-grad-celebracao:linear-gradient(90deg,#F5A623,#F26B4E);
+  --ts-grad-card-destaque:linear-gradient(135deg,#0A3A4E,#0F81AC);
+  /* Tipografia */
+  --ts-font-display:'Sora',sans-serif;
+  --ts-font-body:'Public Sans',sans-serif;
+  --ts-font-mono:'IBM Plex Mono',monospace;
+  /* Espaço (base 4px) */
+  --ts-space-xs:4px; --ts-space-sm:8px; --ts-space-md:16px; --ts-space-lg:24px; --ts-space-xl:32px; --ts-space-2xl:48px;
+  /* Raio */
+  --ts-radius-input:8px; --ts-radius-btn:10px; --ts-radius-card:14px; --ts-radius-modal:20px; --ts-radius-pill:999px;
+  /* Sombras */
+  --ts-shadow-1:0 1px 3px rgba(10,58,78,.10);
+  --ts-shadow-2:0 4px 14px rgba(10,58,78,.14);
+  --ts-shadow-3:0 12px 32px rgba(10,58,78,.20);
+  --ts-focus-ring:0 0 0 3px #D2EEF8;
+  --ts-overlay:rgba(10,58,78,.55);
+}
