@@ -1,6 +1,7 @@
 import { useEffect, useState, type DragEvent } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { journeyApi } from './api'
+import { ProximoPasso } from '../../shared/components/ProximoPasso'
 import { useAuth } from '../auth/hooks/use-auth'
 
 /** Fase 1 (leve): o coração é a lista de objetivos PRIORIZADOS — a ordem
@@ -171,6 +172,14 @@ export function ObjetivosPage() {
           )}
         </section>
       </div>
+
+      {(meus?.length ?? 0) > 0 && (
+        <ProximoPasso
+          titulo="Agora meça a dor: quanto cada um dos 28 processos incomoda o seu centro?"
+          cta="Ir para o termômetro"
+          rota="/termometro"
+        />
+      )}
     </div>
   )
 }

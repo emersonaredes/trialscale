@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { processesApi } from './api'
 import { LevelBadge } from '../../shared/components/badges'
 import { Paywall, isPlanRequired } from '../../shared/components/Paywall'
+import { ProximoPasso } from '../../shared/components/ProximoPasso'
 
 const GRUPO: Record<string, string> = {
   central: 'Central',
@@ -100,6 +101,12 @@ export function ProcessosPage() {
           </tbody>
         </table>
       </div>
+
+      <ProximoPasso
+        titulo="Cruze dor, estratégia e dependências para decidir onde atacar primeiro"
+        cta="Ver priorização"
+        rota="/priorizacao"
+      />
     </div>
   )
 }

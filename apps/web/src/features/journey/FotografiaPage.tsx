@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { journeyApi, type PhotoProcess } from './api'
 import { corDaDor } from '../../shared/lib/cores'
+import { ProximoPasso } from '../../shared/components/ProximoPasso'
 import { useAuth } from '../auth/hooks/use-auth'
 
 /** Fotografia v3: MATRIZ dor × estratégia em quadrantes (proposta v3 §5).
@@ -130,18 +131,11 @@ export function FotografiaPage() {
         </p>
       )}
 
-      {/* ---- Próximo passo ---- */}
-      <div className="proximo-passo">
-        <span>
-          <span className="eyebrow">Próximo passo</span>
-          <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600, color: 'var(--ink)' }}>
-            Abrir o Raio-X das suas 3 maiores dores e transformá-las em plano
-          </span>
-        </span>
-        <Link to={pago ? '/processos' : '/assinatura'}>
-          <button className="avancar">{pago ? 'Abrir Raio-X' : 'Conhecer os planos'} →</button>
-        </Link>
-      </div>
+      <ProximoPasso
+        titulo="Abrir o Raio-X das suas 3 maiores dores e transformá-las em plano"
+        cta={pago ? 'Abrir Raio-X' : 'Conhecer os planos'}
+        rota={pago ? '/processos' : '/assinatura'}
+      />
     </div>
   )
 }

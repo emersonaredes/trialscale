@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { journeyApi } from './api'
 import { corDaDor } from '../../shared/lib/cores'
+import { ProximoPasso } from '../../shared/components/ProximoPasso'
 
 const GRUPO_TITULO: Record<string, string> = {
   central: 'Processos centrais — do estudo entrar ao estudo encerrar',
@@ -117,11 +118,15 @@ export function TermometroPage() {
         )
       })}
 
-      <div className="linha-acoes">
-        <Link to="/fotografia">
-          <button className="secundario">Ver fotografia parcial</button>
-        </Link>
-      </div>
+      <ProximoPasso
+        titulo={
+          completo
+            ? 'A dor está mapeada — hora de revelar o retrato do seu centro'
+            : `Você pode revelar a fotografia parcial a qualquer momento (${data.answered}/${data.total})`
+        }
+        cta={completo ? 'Revelar minha fotografia' : 'Ver fotografia parcial'}
+        rota="/fotografia"
+      />
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { paidApi, type KanbanCard, type PriorityItem } from './api'
 import { processesApi } from '../processes/api'
 import { LevelBadge, ClassMark } from '../../shared/components/badges'
 import { Paywall, isPlanRequired } from '../../shared/components/Paywall'
+import { ProximoPasso } from '../../shared/components/ProximoPasso'
 import { useAuth } from '../auth/hooks/use-auth'
 
 const COLUNAS: Array<{ chave: string; titulo: string }> = [
@@ -271,6 +272,13 @@ function RodadaAtiva({ podeGerir, aoConcluir }: { podeGerir: boolean; aoConcluir
           </div>
         ))}
       </div>
+
+      <ProximoPasso
+        eyebrow="Enquanto a rodada avança"
+        titulo="Veja suas conquistas e baixe o Mapa de Maturidade para mostrar o progresso"
+        cta="Ver conquistas"
+        rota="/conquistas"
+      />
     </>
   )
 }

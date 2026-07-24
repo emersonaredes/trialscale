@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { paidApi } from './api'
 import { LevelBadge } from '../../shared/components/badges'
 import { Paywall, isPlanRequired } from '../../shared/components/Paywall'
+import { ProximoPasso } from '../../shared/components/ProximoPasso'
 
 /** Priorização: dor (60%) × relevância estratégica (40%) + dependências como
  *  sinalização. Nunca trava a escolha — sugere. */
@@ -96,6 +97,12 @@ export function PriorizacaoPage() {
           </tbody>
         </table>
       </div>
+
+      <ProximoPasso
+        titulo="Transforme os processos sugeridos numa rodada de 3–4 com foco e prazo"
+        cta="Montar rodada com a sugestão"
+        rota="/rodada"
+      />
     </div>
   )
 }

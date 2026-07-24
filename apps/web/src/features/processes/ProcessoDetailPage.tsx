@@ -5,6 +5,7 @@ import { processesApi, type ArtifactStatus } from './api'
 import { LevelBadge, StatePill, SealBadge, ClassMark } from '../../shared/components/badges'
 import { apiDownload } from '../../shared/lib/api-client'
 import { Paywall, isPlanRequired } from '../../shared/components/Paywall'
+import { ProximoPasso } from '../../shared/components/ProximoPasso'
 import { useAuth } from '../auth/hooks/use-auth'
 
 const PROXIMO_ESTADO: Record<string, ArtifactStatus['state']> = {
@@ -177,6 +178,12 @@ export function ProcessoDetailPage() {
             </section>
           )
         })}
+
+      <ProximoPasso
+        titulo="Coloque este processo (e outros 2–3) numa rodada de melhoria com foco"
+        cta="Montar rodada"
+        rota="/rodada"
+      />
 
       {maturity.applies && podeGerirNA && (
         <section className="cartao">

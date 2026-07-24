@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch, apiDownload } from '../../shared/lib/api-client'
 import { Paywall, isPlanRequired } from '../../shared/components/Paywall'
+import { ProximoPasso } from '../../shared/components/ProximoPasso'
 
 interface AchievementStatus {
   code: string
@@ -98,6 +99,12 @@ export function ConquistasPage() {
         O Mapa de Maturidade é <b>autodeclarado</b> — um guia para o seu centro e uma conversa
         franca com patrocinadores, nunca uma certificação.
       </p>
+
+      <ProximoPasso
+        titulo="Cada artefato completo na rodada te aproxima da próxima conquista"
+        cta="Voltar à rodada"
+        rota="/rodada"
+      />
     </div>
   )
 }
