@@ -190,9 +190,26 @@ export const contentRepository = {
   findTemplateById(id: number) {
     return ArtifactTemplate.findByPk(id)
   },
-  findTemplatesByArtifactIds(ids: number[]) {
+  findTemplatesByArtifactIds(ids: number[], t?: Transaction) {
     if (ids.length === 0) return Promise.resolve([])
-    return ArtifactTemplate.findAll({ where: { artifact_id: { [Op.in]: ids } } })
+    return ArtifactTemplate.findAll({
+      where: { artifact_id: { [Op.in]: ids } },
+      ...(t ? { transaction: t } : {}),
+    })
+  },
+  findTemplatesByFileRefs(refs: string[], t?: Transaction) {
+    if (refs.length === 0) return Promise.resolve([])
+    return ArtifactTemplate.findAll({
+      where: { file_ref: { [Op.in]: refs } },
+      ...(t ? { transaction: t } : {}),
+    })
+  },
+  destroyTemplatesByArtifactIds(ids: number[], t?: Transaction) {
+    if (ids.length === 0) return Promise.resolve(0)
+    return ArtifactTemplate.destroy({
+      where: { artifact_id: { [Op.in]: ids } },
+      ...(t ? { transaction: t } : {}),
+    })
   },
   destroyTemplate(id: number) {
     return ArtifactTemplate.destroy({ where: { id } })

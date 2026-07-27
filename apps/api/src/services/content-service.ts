@@ -145,6 +145,7 @@ export const contentService = {
       const oldIds = artifacts.map((a) => a.get('id') as number)
       const seals = await contentRepository.findSealsByArtifactIds(oldIds, t)
       const placements = await contentRepository.findPlacementsByArtifactIds(oldIds, t)
+      const templates = await contentRepository.findTemplatesByArtifactIds(oldIds, t)
 
       for (const artifact of artifacts) {
         const oldId = artifact.get('id') as number
@@ -165,6 +166,20 @@ export const contentService = {
         for (const s of seals.filter((x) => x.get('artifact_id') === oldId)) {
           await contentRepository.createSeal(novoId, s.get('seal_code') as string, t)
         }
+        // Templates acompanham o clone (mesmo file_ref — arquivo é compartilhado
+        // entre versões; a exclusão física só ocorre na última referência).
+        for (const tpl of templates.filter((x) => x.get('artifact_id') === oldId)) {
+          await contentRepository.createTemplate(
+            {
+              artifact_id: novoId,
+              file_ref: tpl.get('file_ref') as string,
+              filename: tpl.get('filename') as string,
+              mime_type: tpl.get('mime_type') as string,
+              size_bytes: tpl.get('size_bytes') as number,
+            },
+            t,
+          )
+        }
         for (const p of placements.filter((x) => x.get('artifact_id') === oldId)) {
           await contentRepository.createPlacement(
             {
@@ -181,8 +196,11 @@ export const contentService = {
     })
   },
 
-  /** Substitui o graph do rascunho (o CMS edita localmente e salva inteiro). */
-  async saveDraft(versionId: number, graph: DraftGraphInput) {
+  /** Substitui o graph do rascunho (o CMS edita localmente e salva inteiro).
+   *  Templates anexados sobrevivem ao rebuild (recasados por logical_key);
+   *  devolve os file_refs que ficaram sem NENHUMA referência (artefato
+   *  removido) para o chamador apagar do storage. */
+  async saveDraft(versionId: number, graph: DraftGraphInput): Promise<{ orphanFileRefs: string[] }> {
     const version = await contentRepository.findVersionById(versionId)
     if (!version) throw new NotFoundError('Versão não encontrada.')
     if (version.get('status') !== 'rascunho') {
@@ -214,7 +232,24 @@ export const contentService = {
       }
     }
 
-    await sequelize.transaction(async (t) => {
+    return sequelize.transaction(async (t) => {
+      // Captura os templates dos artefatos atuais ANTES do rebuild, indexados
+      // pela logical_key — a mesma chave que preserva marcações no publish.
+      const antigos = await contentRepository.findArtifactsByVersion(versionId, t)
+      const keyPorId = new Map(
+        antigos.map((a) => [a.get('id') as number, a.get('logical_key') as string]),
+      )
+      const templatesAntigos = await contentRepository.findTemplatesByArtifactIds(
+        [...keyPorId.keys()],
+        t,
+      )
+      const templatesPorKey = new Map<string, typeof templatesAntigos>()
+      for (const tpl of templatesAntigos) {
+        const key = keyPorId.get(tpl.get('artifact_id') as number)!
+        templatesPorKey.set(key, [...(templatesPorKey.get(key) ?? []), tpl])
+      }
+
+      await contentRepository.destroyTemplatesByArtifactIds([...keyPorId.keys()], t)
       await contentRepository.destroyArtifactsByVersion(versionId, t)
       await contentRepository.destroyLevelsByVersion(versionId, t)
 
@@ -231,11 +266,13 @@ export const contentService = {
         )
       }
 
+      const keysRecriadas = new Set<string>()
       for (const a of graph.artifacts) {
+        const logicalKey = a.logicalKey?.trim() || slugify(a.title)
         const artifact = await contentRepository.createArtifact(
           {
             content_version_id: versionId,
-            logical_key: a.logicalKey?.trim() || slugify(a.title),
+            logical_key: logicalKey,
             artifact_type_id: typeByCode.get(a.typeCode)!,
             title: a.title,
             dod_text: a.dodText,
@@ -248,6 +285,19 @@ export const contentService = {
           t,
         )
         const artifactId = artifact.get('id') as number
+        keysRecriadas.add(logicalKey)
+        for (const tpl of templatesPorKey.get(logicalKey) ?? []) {
+          await contentRepository.createTemplate(
+            {
+              artifact_id: artifactId,
+              file_ref: tpl.get('file_ref') as string,
+              filename: tpl.get('filename') as string,
+              mime_type: tpl.get('mime_type') as string,
+              size_bytes: tpl.get('size_bytes') as number,
+            },
+            t,
+          )
+        }
         for (const seal of [...new Set(a.seals)]) {
           await contentRepository.createSeal(artifactId, seal, t)
         }
@@ -273,6 +323,22 @@ export const contentService = {
           )
         }
       }
+
+      // Órfão de verdade = ref cujo artefato saiu do graph E que nenhuma outra
+      // versão (publicada/arquivada clonada) ainda referencia.
+      const refsCandidatas = [
+        ...new Set(
+          templatesAntigos
+            .filter((tpl) => !keysRecriadas.has(keyPorId.get(tpl.get('artifact_id') as number)!))
+            .map((tpl) => tpl.get('file_ref') as string),
+        ),
+      ]
+      const aindaReferenciadas = new Set(
+        (await contentRepository.findTemplatesByFileRefs(refsCandidatas, t)).map(
+          (tpl) => tpl.get('file_ref') as string,
+        ),
+      )
+      return { orphanFileRefs: refsCandidatas.filter((ref) => !aindaReferenciadas.has(ref)) }
     })
   },
 
