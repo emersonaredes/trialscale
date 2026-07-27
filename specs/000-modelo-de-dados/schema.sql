@@ -558,7 +558,8 @@ INSERT IGNORE INTO `origin_seal` (`code`, `name`) VALUES
   ('A', 'Exigência de norma/ANVISA'),
   ('P', 'PIC (Plano de Implementação de Centros)'),
   ('D', 'Sugestão de design'),
-  ('R', 'Arquitetura de referência ORPC');
+  ('R', 'Arquitetura de referência ORPC'),
+  ('I', 'Achado de inspeção (BPC 2024-2025)');
 
 -- Planos do MVP (valores de exemplo da concepção §6, a validar comercialmente)
 INSERT IGNORE INTO `plan` (`code`, `name`, `amount`) VALUES

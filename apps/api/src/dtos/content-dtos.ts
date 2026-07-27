@@ -4,6 +4,7 @@ export const createProcessSchema = z.object({
   code: z.string().max(20).nullable(),
   name: z.string().min(2).max(200),
   processGroup: z.enum(['central', 'suporte', 'gestao']),
+  orgType: z.enum(['cpc', 'orpc']).optional(), // default 'cpc' no banco (PT-0067)
   oneLineDescription: z.string().max(2000).nullable().optional(),
   objectiveText: z.string().max(5000).nullable().optional(),
 })
@@ -37,7 +38,7 @@ export const saveDraftSchema = z.object({
         title: z.string().min(3).max(255),
         dodText: z.string().min(5),
         whyItMatters: z.string().max(3000).nullable().optional(),
-        seals: z.array(z.enum(['T', 'G', 'A', 'P', 'D'])).max(5),
+        seals: z.array(z.enum(['T', 'G', 'A', 'P', 'D', 'R', 'I'])).max(7),
         conditionCode: z.string().nullable().optional(),
         ownLevel: z.number().int().min(2).max(5),
         ownClassification: z.enum(['essencial', 'complementar']),

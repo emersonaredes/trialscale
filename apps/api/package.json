@@ -15,6 +15,7 @@
     "seed:journey": "tsx src/db/seed-journey.ts",
     "seed:priorities": "tsx src/db/seed-priorities.ts",
     "seed:catalogo": "tsx src/db/seed-content-completo.ts",
+    "seed:catalogo-orpc": "tsx src/db/seed-catalogo-orpc.ts",
     "seed:guias": "tsx src/db/seed-guides.ts",
     "db:apply": "tsx src/db/apply-schema.ts"
   },

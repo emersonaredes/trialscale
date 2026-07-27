@@ -14,7 +14,7 @@ import { auditService } from './audit-service'
 import { ConflictError, UnauthorizedError, ValidationFailedError } from '../errors/domain-errors'
 import { env } from '../config/env'
 import { planRepository } from '../repositories/paid-journey-repository'
-import type { TipoInstituicao, ProtocolosFaixa } from '../types/domain'
+import type { TipoInstituicao, ProtocolosFaixa, OrgType, ModeloServico, OrpcFaixa } from '../types/domain'
 
 export interface RegisterInput {
   name: string
@@ -22,11 +22,24 @@ export interface RegisterInput {
   password: string
   tenant: {
     name: string
-    tipoInstituicao: TipoInstituicao
+    orgType?: OrgType // imutável após o cadastro (PT-0067)
     cidade: string
     estado: string
-    protocolosAtivosFaixa: ProtocolosFaixa
     specialtyIds: number[]
+    // Perfil CPC
+    tipoInstituicao?: TipoInstituicao
+    protocolosAtivosFaixa?: ProtocolosFaixa
+    // Perfil ORPC
+    modeloServico?: ModeloServico
+    assumeAtribuicoesAnvisa?: boolean
+    assumeFarmacovigilancia?: boolean
+    perfilFomento?: boolean
+    prestaMonitoria?: boolean
+    selecionaCentros?: boolean
+    prestaGestaoDados?: boolean
+    ativaCentros?: boolean
+    centrosGeridosFaixa?: OrpcFaixa
+    estudosAtivosFaixa?: OrpcFaixa
   }
   consent: { version: string; accepted: true }
 }
@@ -99,13 +112,30 @@ export const authService = {
         { email: input.email, password_hash: passwordHash, name: input.name },
         t,
       )
+      const orgType = input.tenant.orgType ?? 'cpc'
       const tenant = await identityRepository.createTenant(
         {
           name: input.tenant.name,
-          tipo_instituicao: input.tenant.tipoInstituicao,
+          org_type: orgType,
           cidade: input.tenant.cidade,
           estado: input.tenant.estado.toUpperCase(),
-          protocolos_ativos_faixa: input.tenant.protocolosAtivosFaixa,
+          // Perfil CPC (null para ORPC)
+          tipo_instituicao: orgType === 'cpc' ? (input.tenant.tipoInstituicao ?? null) : null,
+          protocolos_ativos_faixa:
+            orgType === 'cpc' ? (input.tenant.protocolosAtivosFaixa ?? null) : null,
+          // Perfil ORPC (null para CPC)
+          modelo_servico: orgType === 'orpc' ? (input.tenant.modeloServico ?? null) : null,
+          assume_atribuicoes_anvisa:
+            orgType === 'orpc' ? (input.tenant.assumeAtribuicoesAnvisa ?? null) : null,
+          assume_farmacovigilancia:
+            orgType === 'orpc' ? (input.tenant.assumeFarmacovigilancia ?? null) : null,
+          perfil_fomento: orgType === 'orpc' ? (input.tenant.perfilFomento ?? null) : null,
+          presta_monitoria: orgType === 'orpc' ? (input.tenant.prestaMonitoria ?? null) : null,
+          seleciona_centros: orgType === 'orpc' ? (input.tenant.selecionaCentros ?? null) : null,
+          presta_gestao_dados: orgType === 'orpc' ? (input.tenant.prestaGestaoDados ?? null) : null,
+          ativa_centros: orgType === 'orpc' ? (input.tenant.ativaCentros ?? null) : null,
+          centros_geridos_faixa: orgType === 'orpc' ? (input.tenant.centrosGeridosFaixa ?? null) : null,
+          estudos_ativos_faixa: orgType === 'orpc' ? (input.tenant.estudosAtivosFaixa ?? null) : null,
         },
         t,
       )

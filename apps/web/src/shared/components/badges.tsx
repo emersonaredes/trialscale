@@ -46,11 +46,15 @@ export function StatePill({
   )
 }
 
-/** Selos: A = norma (peso máximo); T/G = prática técnica; P/D = sugestão. */
+/** Selos: A = norma e I = achado de inspeção (peso máximo); T/G/R = prática
+ *  técnica/referência; P/D = sugestão. */
 export function SealBadge({ code }: { code: string }) {
   if (code === 'A') return <span className="selo selo-norma">Norma</span>
-  if (code === 'T' || code === 'G')
-    return <span className="selo selo-gcp">{code === 'T' ? 'Tese' : 'GCP'}</span>
+  if (code === 'I') return <span className="selo selo-norma">Inspeção</span>
+  if (code === 'T' || code === 'G' || code === 'R')
+    return (
+      <span className="selo selo-gcp">{code === 'T' ? 'Tese' : code === 'R' ? 'Referência' : 'GCP'}</span>
+    )
   return <span className="selo selo-sugestao">{code === 'P' ? 'PIC' : 'Sugestão'}</span>
 }
 

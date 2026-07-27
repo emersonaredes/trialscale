@@ -4,7 +4,7 @@ import { contentRepository } from '../repositories/content-repository'
 import { migrateAssessments } from '../repositories/assessment-repository'
 import { auditService } from './audit-service'
 import { ConflictError, NotFoundError, ValidationFailedError } from '../errors/domain-errors'
-import type { ProcessGroup, Classification } from '../types/domain'
+import type { ProcessGroup, Classification, OrgType } from '../types/domain'
 
 const LEVEL_NAMES: Record<number, string> = {
   1: 'Inicial',
@@ -49,6 +49,7 @@ export const contentService = {
     code: string | null
     name: string
     processGroup: ProcessGroup
+    orgType?: OrgType
     oneLineDescription?: string | null
     objectiveText?: string | null
   }) {
@@ -59,6 +60,7 @@ export const contentService = {
       code: input.code,
       name: input.name,
       process_group: input.processGroup,
+      org_type: input.orgType ?? 'cpc',
       one_line_description: input.oneLineDescription ?? null,
       objective_text: input.objectiveText ?? null,
     })

@@ -54,6 +54,6 @@ export const PainScore: ModelDefined<PainScoreAttrs, PainScoreCreation> = sequel
 )
 
 // ---------------------------------------------------------------- tenancy (ADR 001)
-registerTenancy(Objective, 'global')
+registerTenancy(Objective, 'org-lookup') // PT-0067: menu segmentado por org_type
 registerTenancy(TenantObjective, 'tenant')
 registerTenancy(PainScore, 'tenant')

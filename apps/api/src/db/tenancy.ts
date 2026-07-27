@@ -23,7 +23,7 @@ import {
   BlockedModelOperationError,
 } from '../errors/domain-errors'
 
-export type Tenancy = 'tenant' | 'global' | 'catalog'
+export type Tenancy = 'tenant' | 'global' | 'catalog' | 'org-lookup'
 
 const registry = new Map<ModelStatic<any>, Tenancy>()
 
@@ -113,7 +113,28 @@ export function registerTenancy(model: ModelStatic<any>, tenancy: Tenancy): void
     return
   }
 
+  // 'org-lookup' (PT-0067): lookup global segmentado por tipo de organização
+  // (ex.: objective). Filtra org_type quando o contexto o define; staff e
+  // seeds (sem orgType no contexto) veem tudo.
+  if (tenancy === 'org-lookup') {
+    const orgWhere = (options: any) => {
+      const ctx = getContext()
+      if (ctx?.bypassTenantScope || ctx?.orgType == null) return
+      const filtro = { org_type: ctx.orgType }
+      const original = options.where
+      options.where = original ? { [Op.and]: [original, filtro] } : filtro
+    }
+    model.addHook('beforeFind', (options: any) => orgWhere(options))
+    model.addHook('beforeCount', (options: any) => orgWhere(options))
+    return
+  }
+
   // 'catalog' (Fatia 1): leitura = catálogo global + personalizados do tenant.
+  // PT-0067: se o model tem org_type e o contexto define orgType, o catálogo
+  // é adicionalmente segmentado por tipo de organização — mecanizado aqui,
+  // NUNCA por filtro manual em repository (mesma razão do ADR 001: uma
+  // omissão faria um ORPC ser diagnosticado contra artefatos de CPC).
+  const temOrgType = 'org_type' in model.getAttributes()
   const catalogWhere = (options: any) => {
     const ctx = getContext()
     if (ctx?.bypassTenantScope) return
@@ -121,8 +142,11 @@ export function registerTenancy(model: ModelStatic<any>, tenancy: Tenancy): void
       ctx && ctx.tenantId != null
         ? { [Op.or]: [{ tenant_id: null }, { tenant_id: ctx.tenantId }] }
         : { tenant_id: null }
+    const partes: any[] = [filtro]
+    if (temOrgType && ctx?.orgType != null) partes.push({ org_type: ctx.orgType })
+    const combinado = partes.length === 1 ? filtro : { [Op.and]: partes }
     const original = options.where
-    options.where = original ? { [Op.and]: [original, filtro] } : filtro
+    options.where = original ? { [Op.and]: [original, combinado] } : combinado
   }
   model.addHook('beforeFind', (options: any) => catalogWhere(options))
   model.addHook('beforeCount', (options: any) => catalogWhere(options))

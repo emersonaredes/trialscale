@@ -45,6 +45,11 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
         const membership = await identityRepository.findMembership(ctx.userId, ctx.tenantId)
         if (!membership) throw new UnauthorizedError('Sessão inválida.')
         ctx.role = membership.get('role') as Role // banco vence token
+        // Catálogo por tipo de organização (PT-0067): sempre do banco — o hook
+        // da zona catalog usa este valor; sem ele, um ORPC veria o catálogo CPC.
+        const tenant = await identityRepository.findTenantById(ctx.tenantId)
+        if (!tenant) throw new UnauthorizedError('Sessão inválida.')
+        ctx.orgType = (tenant.get('org_type') as 'cpc' | 'orpc' | null) ?? 'cpc'
       }
       next()
     } catch (err) {

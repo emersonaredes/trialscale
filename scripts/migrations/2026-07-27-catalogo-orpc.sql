@@ -34,7 +34,8 @@ INSERT IGNORE INTO `artifact_type` (`code`, `name`) VALUES
   ('documento_governanca', 'Documento de governança');
 
 INSERT IGNORE INTO `origin_seal` (`code`, `name`) VALUES
-  ('R', 'Arquitetura de referência ORPC');
+  ('R', 'Arquitetura de referência ORPC'),
+  ('I', 'Achado de inspeção (BPC 2024-2025)');
 
 -- Só condições com uso artefato-nível confirmado nas levas E campo de perfil
 -- correspondente (RN-3: condição sem case no avaliador nunca exclui nada).

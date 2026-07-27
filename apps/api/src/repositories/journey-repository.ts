@@ -10,7 +10,8 @@ import {
   type PainScoreCreation,
 } from '../models/journey'
 
-/** Lookup global de objetivos estratégicos (menu por temas). */
+/** Lookup global de objetivos estratégicos (menu por temas; segmentado por
+ *  org_type via zona 'org-lookup' — PT-0067). */
 export const objectiveRepository = {
   listAll() {
     return Objective.findAll({ order: [['id', 'ASC']] })
@@ -18,8 +19,11 @@ export const objectiveRepository = {
   findByIds(ids: number[]) {
     return Objective.findAll({ where: { id: ids } })
   },
-  findOrCreate(theme: string, name: string) {
-    return Objective.findOrCreate({ where: { theme, name }, defaults: { theme, name } as never })
+  findOrCreate(theme: string, name: string, orgType: 'cpc' | 'orpc' = 'cpc') {
+    return Objective.findOrCreate({
+      where: { theme, name, org_type: orgType },
+      defaults: { theme, name, org_type: orgType } as never,
+    })
   },
 }
 
