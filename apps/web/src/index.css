@@ -1079,6 +1079,219 @@ button.avancar:hover:not(:disabled) {
   background: var(--verde-50);
 }
 
+/* ---------- Textos instrutivos (handoff v4) ---------- */
+.detalhe-processo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .detalhe-processo {
+    grid-template-columns: 1fr;
+  }
+  .rail-direita {
+    position: static !important;
+  }
+}
+.rail-direita {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.porque-importa-cartao {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-left: 4px solid var(--azul-600);
+  border-radius: var(--raio-card);
+  padding: 14px 16px;
+}
+.porque-importa-cartao p {
+  font-size: 13px;
+  line-height: 1.62;
+  text-wrap: pretty;
+  margin: 6px 0 0;
+}
+.colapsavel {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-card);
+}
+.colapsavel.aberta {
+  border-color: var(--azul-200);
+}
+.cabecalho-colapsavel {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 11px 14px;
+  text-align: left;
+}
+.cabecalho-colapsavel:hover:not(:disabled) {
+  background: var(--azul-50);
+}
+.cabecalho-colapsavel .sinal {
+  color: var(--azul-600);
+  font-size: 16px;
+  font-weight: 800;
+}
+.corpo-colapsavel {
+  padding: 0 14px 12px;
+}
+.fluxo-colunas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.fluxo-colunas h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--secundario);
+  margin: 0 0 5px;
+}
+.chip {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 11.5px;
+  margin: 0 4px 4px 0;
+  border: 1px solid var(--borda);
+  background: #f2f7f9;
+  color: var(--corpo);
+}
+.chip.atividade {
+  background: var(--azul-50);
+  border-color: var(--azul-200);
+  color: var(--azul-900);
+}
+.chip.saida {
+  background: var(--verde-50);
+  border-color: var(--verde-100);
+}
+.chip.indicador {
+  background: transparent;
+  border: 1px dashed var(--azul-200);
+  color: var(--azul-700);
+}
+.porque-importa {
+  margin-top: 6px;
+  background: #f7fafb;
+  border-left: 2px solid var(--azul-200);
+  border-radius: 0 6px 6px 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--corpo);
+  text-wrap: pretty;
+}
+.porque-importa b {
+  color: var(--azul-600);
+}
+.lista-riscos {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.lista-riscos li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 4px 0;
+  font-size: 12.5px;
+}
+.lista-riscos li::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--coral);
+  flex: none;
+  margin-top: 6px;
+}
+.grade-praticas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.mini-cartao {
+  border: 1px solid var(--divisor);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.mini-cartao b {
+  display: block;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+.mini-cartao span {
+  font-size: 11.5px;
+  color: var(--secundario);
+  line-height: 1.5;
+}
+.item-regulatorio {
+  padding: 6px 0;
+  border-top: 1px solid var(--divisor);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.item-regulatorio:first-of-type {
+  border-top: 0;
+}
+.item-regulatorio .fonte {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: var(--azul-600);
+}
+.comece-aqui {
+  background: linear-gradient(135deg, var(--azul-900), var(--azul-600));
+  border-radius: var(--raio-card);
+  color: #fff;
+  padding: 14px;
+}
+.comece-aqui h3 {
+  color: #fff;
+  font-size: 13.5px;
+  margin: 0 0 8px;
+}
+.comece-aqui .passo-item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--azul-100);
+}
+.comece-aqui .num {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-weight: 800;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  margin-top: 1px;
+}
+.comece-aqui button {
+  width: 100%;
+  margin-top: 4px;
+}
+
 /* ---------- Toast (DS: sucesso = bg azul-900, ícone verde, 5s) ---------- */
 .toast {
   position: fixed;

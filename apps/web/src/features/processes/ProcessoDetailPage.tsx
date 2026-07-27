@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { processesApi, type ArtifactStatus } from './api'
+import { processesApi, type ArtifactStatus, type ProcessGuide } from './api'
 import { LevelBadge, StatePill, SealBadge, ClassMark } from '../../shared/components/badges'
+import { SecaoColapsavel } from '../../shared/components/SecaoColapsavel'
 import { apiDownload } from '../../shared/lib/api-client'
 import { Paywall, isPlanRequired } from '../../shared/components/Paywall'
 import { ProximoPasso } from '../../shared/components/ProximoPasso'
@@ -52,7 +53,7 @@ export function ProcessoDetailPage() {
   if (isPlanRequired(error)) return <Paywall />
   if (isLoading || !data) return <p className="carregando">Carregando o Raio-X…</p>
 
-  const { process, levels, maturity } = data
+  const { guide, process, levels, maturity } = data
   const podeGerirNA = session?.role === 'administrador' || session?.role === 'coordenador'
 
   return (
@@ -79,6 +80,9 @@ export function ProcessoDetailPage() {
         </div>
       </div>
 
+      <div className={guide ? 'detalhe-processo' : undefined}>
+        <div className="pilha">
+
       {!maturity.applies && (
         <div className="aviso">
           Este processo está marcado como <b>não se aplica</b>
@@ -102,6 +106,59 @@ export function ProcessoDetailPage() {
           Fora do seu cálculo pelo perfil do centro (transparência da régua):{' '}
           {maturity.excludedByCondition.map((e) => e.title).join(' · ')}
         </div>
+      )}
+
+      {/* ---- Texto instrutivo (handoff v4): sempre aberto — primeira leitura ---- */}
+      {guide && (
+        <div className="porque-importa-cartao">
+          <h2 style={{ margin: 0 }}>Por que este processo importa</h2>
+          {guide.purposeMd.split(/\n\n+/).map((paragrafo, i) => (
+            <p key={i}>{paragrafo}</p>
+          ))}
+        </div>
+      )}
+
+      {guide && (
+        <SecaoColapsavel titulo="Como o processo funciona" aberta>
+          {(guide.flow.inputs.length > 0 || guide.flow.activities.length > 0) && (
+            <div className="fluxo-colunas">
+              <div>
+                <h4>Entradas</h4>
+                {guide.flow.inputs.map((c) => (
+                  <span key={c} className="chip">{c}</span>
+                ))}
+              </div>
+              <div>
+                <h4>Atividades</h4>
+                {guide.flow.activities.map((c) => (
+                  <span key={c} className="chip atividade">{c}</span>
+                ))}
+              </div>
+              <div>
+                <h4>Saídas</h4>
+                {guide.flow.outputs.map((c) => (
+                  <span key={c} className="chip saida">{c}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {guide.flowMd &&
+            guide.flowMd.split(/\n\n+/).map((paragrafo, i) => (
+              <p key={i} style={{ fontSize: 12.5, lineHeight: 1.6, textWrap: 'pretty' }}>
+                {paragrafo}
+              </p>
+            ))}
+          {guide.indicators.length > 0 && (
+            <div style={{ borderTop: '1px solid var(--divisor)', paddingTop: 8, marginTop: 4 }}>
+              <h4 style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--secundario)', margin: '0 0 5px' }}>
+                Indicadores propostos
+              </h4>
+              {guide.indicators.map((c) => (
+                <span key={c} className="chip indicador">{c}</span>
+              ))}
+            </div>
+          )}
+        </SecaoColapsavel>
       )}
 
       {levels
@@ -140,6 +197,11 @@ export function ProcessoDetailPage() {
                       {a.shared && <span className="tag-compartilhado">compartilhado</span>}
                     </div>
                     <p className="dod">{a.dodText}</p>
+                    {a.whyItMatters && (
+                      <p className="porque-importa">
+                        <b>Por que importa:</b> {a.whyItMatters}
+                      </p>
+                    )}
                     {a.templates.length > 0 && (
                       <div className="linha-acoes">
                         {a.templates.map((t) => (
@@ -179,6 +241,48 @@ export function ProcessoDetailPage() {
           )
         })}
 
+      {guide && guide.risks.length > 0 && (
+        <SecaoColapsavel titulo="Riscos da execução inadequada">
+          <ul className="lista-riscos">
+            {guide.risks.map((risco, i) => (
+              <li key={i}>{risco}</li>
+            ))}
+          </ul>
+        </SecaoColapsavel>
+      )}
+
+      {guide && guide.practices.length > 0 && (
+        <SecaoColapsavel titulo="Boas práticas recomendadas">
+          <div className="grade-praticas">
+            {guide.practices.map((pratica, i) => (
+              <div key={i} className="mini-cartao">
+                <b>{pratica.title}</b>
+                <span>{pratica.text}</span>
+              </div>
+            ))}
+          </div>
+        </SecaoColapsavel>
+      )}
+
+      {guide && guide.regulatory.length > 0 && (
+        <SecaoColapsavel titulo="Atualizações regulatórias">
+          {guide.regulatory.map((item, i) => (
+            <div key={i} className="item-regulatorio">
+              <span className="fonte">{item.source}</span>
+              {item.text}
+              {item.url && (
+                <>
+                  {' '}
+                  <a href={item.url} target="_blank" rel="noreferrer">
+                    ver fonte ↗
+                  </a>
+                </>
+              )}
+            </div>
+          ))}
+        </SecaoColapsavel>
+      )}
+
       <ProximoPasso
         titulo="Coloque este processo (e outros 2–3) numa rodada de melhoria com foco"
         cta="Montar rodada"
@@ -209,6 +313,46 @@ export function ProcessoDetailPage() {
           </div>
         </section>
       )}
+        </div>
+
+        {guide && <RailDireita guide={guide} />}
+      </div>
     </div>
+  )
+}
+
+/** Trilho fixo à direita (handoff v4): primeiros passos + fonte do conteúdo. */
+function RailDireita({ guide }: { guide: ProcessGuide }) {
+  const navigate = useNavigate()
+  return (
+    <aside className="rail-direita">
+      {guide.gettingStarted.length > 0 && (
+        <div className="comece-aqui">
+          <h3>Comece por aqui</h3>
+          {guide.gettingStarted.map((passo, i) => (
+            <div key={i} className="passo-item">
+              <span className="num">{i + 1}</span>
+              <span>{passo}</span>
+            </div>
+          ))}
+          <button className="pequeno" onClick={() => navigate('/rodada')}>
+            Colocar numa rodada →
+          </button>
+        </div>
+      )}
+      {guide.sourceCitation && (
+        <div className="cartao" style={{ padding: '10px 12px' }}>
+          <span
+            className="apoio"
+            style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}
+          >
+            Fonte do conteúdo
+          </span>
+          <p className="apoio" style={{ margin: '4px 0 0', fontSize: 11.5, lineHeight: 1.5 }}>
+            {guide.sourceCitation}
+          </p>
+        </div>
+      )}
+    </aside>
   )
 }

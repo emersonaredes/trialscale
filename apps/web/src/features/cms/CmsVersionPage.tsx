@@ -78,7 +78,11 @@ export function CmsVersionPage() {
       await refetch()
       return true
     } catch (e) {
-      setErro(e instanceof ApiError ? `${e.message} ${JSON.stringify(e.details ?? '')}` : 'Erro ao salvar.')
+      setErro(
+        e instanceof ApiError
+          ? [e.message, e.details ? JSON.stringify(e.details) : null].filter(Boolean).join(' ')
+          : 'Erro ao salvar.',
+      )
       return false
     } finally {
       setSalvando(false)
@@ -271,6 +275,16 @@ export function CmsVersionPage() {
                 {(a.templates ?? []).map((t) => (
                   <span key={t.id} className="tag-compartilhado">
                     {t.filename}
+                    {!somenteLeitura && (
+                      <button
+                        className="ghost pequeno"
+                        style={{ padding: '0 4px' }}
+                        title="Remover template"
+                        onClick={() => void cmsApi.deleteTemplate(t.id).then(() => refetch())}
+                      >
+                        ×
+                      </button>
+                    )}
                   </span>
                 ))}
                 {!somenteLeitura && (

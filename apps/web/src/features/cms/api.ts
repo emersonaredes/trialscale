@@ -67,4 +67,6 @@ export const cmsApi = {
       body: fd,
     })
   },
+  deleteTemplate: (templateId: number) =>
+    apiFetch<void>(`/api/cms/templates/${templateId}`, { method: 'DELETE' }),
 }

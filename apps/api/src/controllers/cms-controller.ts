@@ -74,7 +74,15 @@ export const cmsController = {
 
   async saveDraft(req: Request, res: Response, next: NextFunction) {
     try {
-      await contentService.saveDraft(Number(req.params.id), req.body as DraftGraphInput)
+      const { orphanFileRefs } = await contentService.saveDraft(
+        Number(req.params.id),
+        req.body as DraftGraphInput,
+      )
+      // Artefato removido do rascunho → arquivo sem nenhuma referência sai do storage
+      for (const ref of orphanFileRefs) {
+        const filePath = path.join(TEMPLATE_DIR, ref)
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+      }
       res.status(204).end()
     } catch (err) {
       next(err)
@@ -120,9 +128,15 @@ export const cmsController = {
     try {
       const template = await contentRepository.findTemplateById(Number(req.params.id))
       if (!template) throw new NotFoundError('Template não encontrado.')
-      const filePath = path.join(TEMPLATE_DIR, template.get('file_ref') as string)
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+      const fileRef = template.get('file_ref') as string
       await contentRepository.destroyTemplate(Number(req.params.id))
+      // O arquivo pode ser compartilhado por clones em outras versões — só sai
+      // do storage quando a última linha que o referencia é removida.
+      const restantes = await contentRepository.findTemplatesByFileRefs([fileRef])
+      if (restantes.length === 0) {
+        const filePath = path.join(TEMPLATE_DIR, fileRef)
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+      }
       res.status(204).end()
     } catch (err) {
       next(err)

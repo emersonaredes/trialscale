@@ -36,6 +36,7 @@ export const saveDraftSchema = z.object({
         typeCode: z.string().min(1),
         title: z.string().min(3).max(255),
         dodText: z.string().min(5),
+        whyItMatters: z.string().max(3000).nullable().optional(),
         seals: z.array(z.enum(['T', 'G', 'A', 'P', 'D'])).max(5),
         conditionCode: z.string().nullable().optional(),
         ownLevel: z.number().int().min(2).max(5),

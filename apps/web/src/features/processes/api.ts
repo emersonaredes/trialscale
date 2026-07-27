@@ -13,11 +13,24 @@ export interface ProcessOverviewItem {
   nextLevelMissing: number
 }
 
+export interface ProcessGuide {
+  purposeMd: string
+  flowMd: string | null
+  flow: { inputs: string[]; activities: string[]; outputs: string[] }
+  indicators: string[]
+  risks: string[]
+  practices: Array<{ title: string; text: string }>
+  regulatory: Array<{ source: string; text: string; url?: string }>
+  gettingStarted: string[]
+  sourceCitation: string | null
+}
+
 export interface ArtifactStatus {
   artifactId: number
   logicalKey: string
   title: string
   dodText: string
+  whyItMatters: string | null
   typeCode: string
   seals: string[]
   level: number
@@ -29,6 +42,7 @@ export interface ArtifactStatus {
 }
 
 export interface ProcessDetail {
+  guide: ProcessGuide | null
   process: {
     id: number
     code: string | null
