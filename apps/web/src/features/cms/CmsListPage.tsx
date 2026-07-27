@@ -37,12 +37,17 @@ export function CmsListPage() {
 
   return (
     <div className="pilha">
-      <div>
-        <h1>CMS — Catálogo de processos</h1>
-        <p className="apoio">
-          Rascunho → edição → publicação. Centros só veem conteúdo publicado; publicar migra as
-          marcações automaticamente (ADR 002).
-        </p>
+      <div className="cabecalho-pagina">
+        <div>
+          <h1>CMS — Catálogo de processos</h1>
+          <p className="apoio">
+            Rascunho → edição → publicação. Centros só veem conteúdo publicado; publicar migra as
+            marcações automaticamente (ADR 002).
+          </p>
+        </div>
+        <Link to="/cms/pesos">
+          <button className="secundario">Pesos da priorização</button>
+        </Link>
       </div>
 
       <div className="cartao" style={{ padding: 0, overflow: 'hidden' }}>

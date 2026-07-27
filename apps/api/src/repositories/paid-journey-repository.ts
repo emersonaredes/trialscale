@@ -62,6 +62,22 @@ export const priorityLookupRepository = {
       defaults: { objective_id: objectiveId, process_id: processId, weight: String(weight) } as never,
     })
   },
+  /** UPSERT de verdade: cria ou ATUALIZA o peso (editor do CMS e seed). */
+  async setWeight(objectiveId: number, processId: number, weight: number): Promise<void> {
+    const [row, created] = await ObjectiveProcessWeight.findOrCreate({
+      where: { objective_id: objectiveId, process_id: processId },
+      defaults: { objective_id: objectiveId, process_id: processId, weight: String(weight) } as never,
+    })
+    if (!created && Number(row.get('weight')) !== weight) {
+      row.set('weight' as never, String(weight) as never)
+      await row.save()
+    }
+  },
+  async removeWeight(objectiveId: number, processId: number): Promise<void> {
+    await ObjectiveProcessWeight.destroy({
+      where: { objective_id: objectiveId, process_id: processId },
+    })
+  },
   listDependencies() {
     return ProcessDependency.findAll()
   },

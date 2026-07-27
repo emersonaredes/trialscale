@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import crypto from 'node:crypto'
 import type { Request, Response, NextFunction } from 'express'
 import { contentService, type DraftGraphInput } from '../services/content-service'
+import { priorityWeightsService } from '../services/priority-weights-service'
 import { contentRepository } from '../repositories/content-repository'
 import { getContext } from '../context/request-context'
 import { NotFoundError, ValidationFailedError } from '../errors/domain-errors'
@@ -93,6 +94,29 @@ export const cmsController = {
     try {
       const ctx = getContext()
       res.json(await contentService.publish(Number(req.params.id), ctx?.userId ?? null))
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  // ---- Editor de pesos objetivo→processo (curadoria da priorização) ----
+  async getPriorityWeights(_req: Request, res: Response, next: NextFunction) {
+    try {
+      res.json(await priorityWeightsService.getMatrix())
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  async setPriorityWeight(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { objectiveId, processId, weight } = req.body as {
+        objectiveId: number
+        processId: number
+        weight: number
+      }
+      await priorityWeightsService.setWeight(objectiveId, processId, weight)
+      res.status(204).end()
     } catch (err) {
       next(err)
     }

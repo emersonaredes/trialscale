@@ -63,7 +63,8 @@ export async function seedPriorities(): Promise<{ pesos: number; dependencias: n
     for (const [codigo, peso] of linha.processos) {
       const processId = idPorCodigo.get(codigo)
       if (!processId) continue
-      await priorityLookupRepository.createWeight(objetivoId, processId, peso)
+      // UPSERT: rodar o seed de novo atualiza pesos editados no MAPA.
+      await priorityLookupRepository.setWeight(objetivoId, processId, peso)
       pesos++
     }
   }
