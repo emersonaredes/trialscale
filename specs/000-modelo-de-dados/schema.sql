@@ -176,6 +176,7 @@ CREATE TABLE IF NOT EXISTS `artifact` (
   `artifact_type_id`           TINYINT UNSIGNED NOT NULL,
   `title`                      VARCHAR(255) NOT NULL,
   `dod_text`                   TEXT NOT NULL,              -- definição de pronto (frase completa)
+  `why_it_matters`             TEXT NULL,                  -- "por que importa" (texto instrutivo v4)
   `owner_process_id`           BIGINT UNSIGNED NOT NULL,
   `applicability_condition_id` SMALLINT UNSIGNED NULL,
   `created_at`                 DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -243,6 +244,26 @@ CREATE TABLE IF NOT EXISTS `artifact_template` (
   CONSTRAINT `fk_template_artifact` FOREIGN KEY (`artifact_id`) REFERENCES `artifact` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Templates para download anexados pela equipe TrialScale (anexos assimétricos).';
+
+-- Texto instrutivo por processo (handoff v4; 1:1, conteúdo editorial re-seedável)
+CREATE TABLE IF NOT EXISTS `process_guide` (
+  `process_id`      BIGINT UNSIGNED NOT NULL,
+  `purpose_md`      TEXT NOT NULL,
+  `flow_md`         TEXT NULL,          -- prosa de "Como o processo funciona"
+  `flow_inputs`     JSON NULL,
+  `flow_activities` JSON NULL,
+  `flow_outputs`    JSON NULL,
+  `indicators`      JSON NULL,
+  `risks`           JSON NULL,
+  `practices`       JSON NULL,
+  `regulatory`      JSON NULL,          -- regra editorial: normas SEMPRE aqui
+  `getting_started` JSON NULL,
+  `source_citation` TEXT NULL,
+  `updated_at`      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`process_id`),
+  CONSTRAINT `fk_guide_process` FOREIGN KEY (`process_id`) REFERENCES `process` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Texto instrutivo do processo (v4): ensina por que importa, como funciona, riscos e práticas.';
 
 -- =============================================================================
 -- 2. IDENTIDADE (user global; demais tabelas de centro com tenant_id NOT NULL)

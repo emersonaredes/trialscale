@@ -19,6 +19,7 @@
     "seed:journey": "npm run seed:journey -w apps/api",
     "seed:priorities": "npm run seed:priorities -w apps/api",
     "seed:catalogo": "npm run seed:catalogo -w apps/api",
+    "seed:guias": "npm run seed:guias -w apps/api",
     "db:apply": "npm run db:apply -w apps/api"
   },
   "devDependencies": {

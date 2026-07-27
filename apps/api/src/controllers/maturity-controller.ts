@@ -4,6 +4,7 @@ import type { Request, Response, NextFunction } from 'express'
 import { maturityService } from '../services/maturity-service'
 import { assessmentService } from '../services/assessment-service'
 import { contentRepository } from '../repositories/content-repository'
+import { guideRepository } from '../repositories/guide-repository'
 import { NotFoundError } from '../errors/domain-errors'
 import { TEMPLATE_DIR } from './cms-controller'
 import type { AssessmentState } from '../types/domain'
@@ -27,7 +28,30 @@ export const maturityController = {
       if (!process || !published) throw new NotFoundError('Processo não encontrado.')
       const maturity = await maturityService.computeProcess(processId)
       const levels = await contentRepository.findLevelsByVersion(published.get('id') as number)
+
+      // Texto instrutivo (handoff v4) — guide: null é estado válido (UI omite)
+      const guideRow = await guideRepository.findByProcessId(processId)
+      const guide = guideRow
+        ? {
+            purposeMd: guideRow.get('purpose_md') as string,
+            flowMd: guideRow.get('flow_md') as string | null,
+            flow: {
+              inputs: (guideRow.get('flow_inputs') as string[] | null) ?? [],
+              activities: (guideRow.get('flow_activities') as string[] | null) ?? [],
+              outputs: (guideRow.get('flow_outputs') as string[] | null) ?? [],
+            },
+            indicators: (guideRow.get('indicators') as string[] | null) ?? [],
+            risks: (guideRow.get('risks') as string[] | null) ?? [],
+            practices: (guideRow.get('practices') as Array<{ title: string; text: string }> | null) ?? [],
+            regulatory:
+              (guideRow.get('regulatory') as Array<{ source: string; text: string; url?: string }> | null) ?? [],
+            gettingStarted: (guideRow.get('getting_started') as string[] | null) ?? [],
+            sourceCitation: guideRow.get('source_citation') as string | null,
+          }
+        : null
+
       res.json({
+        guide,
         process: {
           id: processId,
           code: process.get('code'),

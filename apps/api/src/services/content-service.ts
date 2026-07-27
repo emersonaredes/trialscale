@@ -19,6 +19,7 @@ export interface DraftArtifactInput {
   typeCode: string
   title: string
   dodText: string
+  whyItMatters?: string | null // texto instrutivo v4 ("por que importa")
   seals: string[]
   conditionCode?: string | null
   ownLevel: number
@@ -154,6 +155,7 @@ export const contentService = {
             artifact_type_id: artifact.get('artifact_type_id') as number,
             title: artifact.get('title') as string,
             dod_text: artifact.get('dod_text') as string,
+            why_it_matters: artifact.get('why_it_matters') as string | null,
             owner_process_id: processId,
             applicability_condition_id: artifact.get('applicability_condition_id') as number | null,
           },
@@ -237,6 +239,7 @@ export const contentService = {
             artifact_type_id: typeByCode.get(a.typeCode)!,
             title: a.title,
             dod_text: a.dodText,
+            why_it_matters: a.whyItMatters ?? null,
             owner_process_id: processId,
             applicability_condition_id: a.conditionCode
               ? conditionByCode.get(a.conditionCode)!
@@ -374,6 +377,7 @@ export const contentService = {
           typeCode: typeById.get(a.get('artifact_type_id') as number) ?? '',
           title: a.get('title') as string,
           dodText: a.get('dod_text') as string,
+          whyItMatters: a.get('why_it_matters') as string | null,
           seals: seals.filter((s) => s.get('artifact_id') === id).map((s) => s.get('seal_code') as string),
           conditionCode: a.get('applicability_condition_id')
             ? (conditionById.get(a.get('applicability_condition_id') as number) ?? null)

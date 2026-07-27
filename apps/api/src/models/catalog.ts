@@ -100,12 +100,13 @@ export interface ArtifactAttrs {
   artifact_type_id: number
   title: string
   dod_text: string
+  why_it_matters: string | null
   owner_process_id: number
   applicability_condition_id: number | null
 }
 export type ArtifactCreation = Optional<
   ArtifactAttrs,
-  'id' | 'tenant_id' | 'applicability_condition_id'
+  'id' | 'tenant_id' | 'why_it_matters' | 'applicability_condition_id'
 >
 export const Artifact: ModelDefined<ArtifactAttrs, ArtifactCreation> = sequelize.define(
   'artifact',
@@ -117,6 +118,7 @@ export const Artifact: ModelDefined<ArtifactAttrs, ArtifactCreation> = sequelize
     artifact_type_id: { type: DataTypes.TINYINT.UNSIGNED, allowNull: false },
     title: { type: DataTypes.STRING(255), allowNull: false },
     dod_text: { type: DataTypes.TEXT, allowNull: false },
+    why_it_matters: { type: DataTypes.TEXT, allowNull: true },
     owner_process_id: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false },
     applicability_condition_id: { type: DataTypes.SMALLINT.UNSIGNED, allowNull: true },
   },

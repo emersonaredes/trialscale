@@ -43,6 +43,7 @@ export interface ArtifactStatus {
   logicalKey: string
   title: string
   dodText: string
+  whyItMatters: string | null
   typeCode: string
   seals: string[]
   level: number
@@ -124,6 +125,7 @@ export const maturityService = {
         logicalKey: artifact.get('logical_key') as string,
         title: artifact.get('title') as string,
         dodText: artifact.get('dod_text') as string,
+        whyItMatters: artifact.get('why_it_matters') as string | null,
         typeCode: typeById.get(artifact.get('artifact_type_id') as number) ?? '',
         seals: seals.filter((s) => s.get('artifact_id') === id).map((s) => s.get('seal_code') as string),
         level: placement.get('level_number') as number,
