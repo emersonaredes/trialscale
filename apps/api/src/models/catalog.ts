@@ -11,8 +11,9 @@ import type {
   VersionStatus,
   Classification,
   AssessmentState,
+  OrgType,
 } from '../types/domain'
-export type { ProcessGroup, VersionStatus, Classification, AssessmentState }
+export type { ProcessGroup, VersionStatus, Classification, AssessmentState, OrgType }
 
 // ---------------------------------------------------------------- process
 export interface ProcessAttrs {
@@ -21,12 +22,13 @@ export interface ProcessAttrs {
   code: string | null
   name: string
   process_group: ProcessGroup
+  org_type: OrgType // catálogo por tipo de organização; custom herda o do tenant (regra de aplicação)
   one_line_description: string | null
   objective_text: string | null
 }
 export type ProcessCreation = Optional<
   ProcessAttrs,
-  'id' | 'tenant_id' | 'code' | 'one_line_description' | 'objective_text'
+  'id' | 'tenant_id' | 'code' | 'org_type' | 'one_line_description' | 'objective_text'
 >
 export const Process: ModelDefined<ProcessAttrs, ProcessCreation> = sequelize.define('process', {
   id: { type: DataTypes.BIGINT.UNSIGNED, primaryKey: true, autoIncrement: true },
@@ -37,6 +39,7 @@ export const Process: ModelDefined<ProcessAttrs, ProcessCreation> = sequelize.de
     type: DataTypes.ENUM('central', 'suporte', 'gestao', 'personalizado'),
     allowNull: false,
   },
+  org_type: { type: DataTypes.ENUM('cpc', 'orpc'), allowNull: false, defaultValue: 'cpc' },
   one_line_description: { type: DataTypes.TEXT, allowNull: true },
   objective_text: { type: DataTypes.TEXT, allowNull: true },
 })
@@ -103,10 +106,20 @@ export interface ArtifactAttrs {
   why_it_matters: string | null
   owner_process_id: number
   applicability_condition_id: number | null
+  // Última verificação regulatória (selo A). Semântica no clone de versão:
+  // NÃO copiada — nova versão nasce NULL e exige re-verificação (decisão
+  // conservadora até o CMS ter o fluxo de curadoria; ver analise_models_orpc 4.1).
+  regulatory_verified_at: string | null
+  regulatory_verified_by: number | null
 }
 export type ArtifactCreation = Optional<
   ArtifactAttrs,
-  'id' | 'tenant_id' | 'why_it_matters' | 'applicability_condition_id'
+  | 'id'
+  | 'tenant_id'
+  | 'why_it_matters'
+  | 'applicability_condition_id'
+  | 'regulatory_verified_at'
+  | 'regulatory_verified_by'
 >
 export const Artifact: ModelDefined<ArtifactAttrs, ArtifactCreation> = sequelize.define(
   'artifact',
@@ -121,6 +134,8 @@ export const Artifact: ModelDefined<ArtifactAttrs, ArtifactCreation> = sequelize
     why_it_matters: { type: DataTypes.TEXT, allowNull: true },
     owner_process_id: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false },
     applicability_condition_id: { type: DataTypes.SMALLINT.UNSIGNED, allowNull: true },
+    regulatory_verified_at: { type: DataTypes.DATEONLY, allowNull: true },
+    regulatory_verified_by: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true },
   },
 )
 
@@ -239,10 +254,11 @@ export interface ProcessApplicabilityAttrs {
   process_id: number
   applies: boolean
   na_justification: string | null
+  area_label: string | null
 }
 export type ProcessApplicabilityCreation = Optional<
   ProcessApplicabilityAttrs,
-  'id' | 'tenant_id' | 'applies' | 'na_justification'
+  'id' | 'tenant_id' | 'applies' | 'na_justification' | 'area_label'
 >
 export const ProcessApplicability: ModelDefined<
   ProcessApplicabilityAttrs,
@@ -253,6 +269,7 @@ export const ProcessApplicability: ModelDefined<
   process_id: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false },
   applies: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   na_justification: { type: DataTypes.STRING(500), allowNull: true },
+  area_label: { type: DataTypes.STRING(80), allowNull: true },
 })
 
 // ---------------------------------------------------------------- tenancy (ADR 001/002)

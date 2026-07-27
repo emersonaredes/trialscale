@@ -30,11 +30,12 @@ export const User: ModelDefined<UserAttrs, UserCreation> = sequelize.define('use
 })
 
 // ---------------------------------------------------------------- tenant
-import type { TipoInstituicao, ProtocolosFaixa } from '../types/domain'
-export type { TipoInstituicao, ProtocolosFaixa }
+import type { TipoInstituicao, ProtocolosFaixa, OrgType, ModeloServico, OrpcFaixa } from '../types/domain'
+export type { TipoInstituicao, ProtocolosFaixa, OrgType, ModeloServico, OrpcFaixa }
 export interface TenantAttrs {
   id: number
   name: string
+  org_type: OrgType // imutável após o cadastro (regra de aplicação)
   tipo_instituicao: TipoInstituicao | null
   cidade: string | null
   estado: string | null
@@ -45,10 +46,23 @@ export interface TenantAttrs {
   plan_id: number | null
   possui_pi_refrigerado: boolean | null
   possui_amostras: boolean | null
+  // Perfil ORPC (NULL para CPC). Só os 3 primeiros têm condição de
+  // aplicabilidade artefato-nível hoje (codes = nomes das colunas):
+  modelo_servico: ModeloServico | null
+  assume_atribuicoes_anvisa: boolean | null
+  assume_farmacovigilancia: boolean | null
+  perfil_fomento: boolean | null
+  presta_monitoria: boolean | null
+  seleciona_centros: boolean | null
+  presta_gestao_dados: boolean | null
+  ativa_centros: boolean | null
+  centros_geridos_faixa: OrpcFaixa | null
+  estudos_ativos_faixa: OrpcFaixa | null
 }
 export type TenantCreation = Optional<
   TenantAttrs,
   | 'id'
+  | 'org_type'
   | 'tipo_instituicao'
   | 'cidade'
   | 'estado'
@@ -59,10 +73,22 @@ export type TenantCreation = Optional<
   | 'plan_id'
   | 'possui_pi_refrigerado'
   | 'possui_amostras'
+  | 'modelo_servico'
+  | 'assume_atribuicoes_anvisa'
+  | 'assume_farmacovigilancia'
+  | 'perfil_fomento'
+  | 'presta_monitoria'
+  | 'seleciona_centros'
+  | 'presta_gestao_dados'
+  | 'ativa_centros'
+  | 'centros_geridos_faixa'
+  | 'estudos_ativos_faixa'
 >
+const ORPC_FAIXAS = ['0_5', '6_15', '16_40', '41_100', '100_mais'] as const
 export const Tenant: ModelDefined<TenantAttrs, TenantCreation> = sequelize.define('tenant', {
   id: { type: DataTypes.BIGINT.UNSIGNED, primaryKey: true, autoIncrement: true },
   name: { type: DataTypes.STRING(200), allowNull: false },
+  org_type: { type: DataTypes.ENUM('cpc', 'orpc'), allowNull: false, defaultValue: 'cpc' },
   tipo_instituicao: { type: DataTypes.ENUM('publica', 'privada', 'terceiro_setor'), allowNull: true },
   cidade: { type: DataTypes.STRING(120), allowNull: true },
   estado: { type: DataTypes.CHAR(2), allowNull: true },
@@ -76,6 +102,19 @@ export const Tenant: ModelDefined<TenantAttrs, TenantCreation> = sequelize.defin
   plan_id: { type: DataTypes.SMALLINT.UNSIGNED, allowNull: true },
   possui_pi_refrigerado: { type: DataTypes.BOOLEAN, allowNull: true },
   possui_amostras: { type: DataTypes.BOOLEAN, allowNull: true },
+  modelo_servico: {
+    type: DataTypes.ENUM('full_service', 'servicos_funcionais', 'aro', 'outro'),
+    allowNull: true,
+  },
+  assume_atribuicoes_anvisa: { type: DataTypes.BOOLEAN, allowNull: true },
+  assume_farmacovigilancia: { type: DataTypes.BOOLEAN, allowNull: true },
+  perfil_fomento: { type: DataTypes.BOOLEAN, allowNull: true },
+  presta_monitoria: { type: DataTypes.BOOLEAN, allowNull: true },
+  seleciona_centros: { type: DataTypes.BOOLEAN, allowNull: true },
+  presta_gestao_dados: { type: DataTypes.BOOLEAN, allowNull: true },
+  ativa_centros: { type: DataTypes.BOOLEAN, allowNull: true },
+  centros_geridos_faixa: { type: DataTypes.ENUM(...ORPC_FAIXAS), allowNull: true },
+  estudos_ativos_faixa: { type: DataTypes.ENUM(...ORPC_FAIXAS), allowNull: true },
 })
 
 // ---------------------------------------------------------------- membership (identidade)

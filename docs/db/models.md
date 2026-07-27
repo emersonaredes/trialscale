@@ -41,6 +41,9 @@ correspondente no DDL.
 | `Role` | `administrador`, `coordenador`, `membro` |
 | `TipoInstituicao` | `publica`, `privada`, `terceiro_setor` |
 | `ProtocolosFaixa` | `0_10`, `11_30`, `31_50`, `51_100`, `101_200`, `200_mais` |
+| `OrgType` | `cpc`, `orpc` — tipo de organização; imutável após o cadastro (PT-0066) |
+| `ModeloServico` | `full_service`, `servicos_funcionais`, `aro`, `outro` |
+| `OrpcFaixa` | `0_5`, `6_15`, `16_40`, `41_100`, `100_mais` — escala própria ORPC (≠ ProtocolosFaixa) |
 | `ProcessGroup` | `central`, `suporte`, `gestao`, `personalizado` |
 | `VersionStatus` | `rascunho`, `publicado`, `arquivado` |
 | `Classification` | `essencial`, `complementar` |
@@ -67,7 +70,8 @@ correspondente no DDL.
 |---|---|---|---|
 | id | BIGINT UNSIGNED | não | PK, auto increment |
 | name | STRING(200) | não | |
-| tipo_instituicao | ENUM(`publica`,`privada`,`terceiro_setor`) | sim | "tipo de tenant" — ENUM inline, não é tabela de lookup |
+| org_type | ENUM(`cpc`,`orpc`) | não | default `cpc`; **imutável após o cadastro** (regra de aplicação; PT-0066) |
+| tipo_instituicao | ENUM(`publica`,`privada`,`terceiro_setor`) | sim | ENUM inline, não é tabela de lookup |
 | cidade | STRING(120) | sim | |
 | estado | CHAR(2) | sim | UF |
 | protocolos_ativos_faixa | ENUM(`0_10`,`11_30`,`31_50`,`51_100`,`101_200`,`200_mais`) | sim | |
@@ -77,6 +81,16 @@ correspondente no DDL.
 | plan_id | SMALLINT UNSIGNED | sim | FK → `plan`; null = gratuito |
 | possui_pi_refrigerado | BOOLEAN | sim | insumo das condições de aplicabilidade |
 | possui_amostras | BOOLEAN | sim | idem |
+| modelo_servico | ENUM(`full_service`,`servicos_funcionais`,`aro`,`outro`) | sim | perfil ORPC (NULL para CPC) |
+| assume_atribuicoes_anvisa | BOOLEAN | sim | perfil ORPC; **tem** condição de aplicabilidade correspondente |
+| assume_farmacovigilancia | BOOLEAN | sim | idem |
+| perfil_fomento | BOOLEAN | sim | idem |
+| presta_monitoria | BOOLEAN | sim | perfil ORPC; capturado no cadastro, **sem** condição artefato-nível ainda |
+| seleciona_centros | BOOLEAN | sim | idem |
+| presta_gestao_dados | BOOLEAN | sim | idem |
+| ativa_centros | BOOLEAN | sim | idem |
+| centros_geridos_faixa | ENUM(`0_5`,`6_15`,`16_40`,`41_100`,`100_mais`) | sim | escala própria ORPC |
+| estudos_ativos_faixa | ENUM(`0_5`,`6_15`,`16_40`,`41_100`,`100_mais`) | sim | idem |
 
 ### Membership → `membership` (zona: global)
 | Campo | Tipo | Null | Observações |
@@ -158,6 +172,7 @@ correspondente no DDL.
 | code | STRING(20) | sim | ex.: `2.5` |
 | name | STRING(200) | não | |
 | process_group | ENUM(`central`,`suporte`,`gestao`,`personalizado`) | não | |
+| org_type | ENUM(`cpc`,`orpc`) | não | default `cpc`; catálogo por tipo de organização — custom herda o do tenant (PT-0066) |
 | one_line_description | TEXT | sim | |
 | objective_text | TEXT | sim | |
 
@@ -199,6 +214,8 @@ correspondente no DDL.
 | why_it_matters | TEXT | sim | texto instrutivo (PT-0064) |
 | owner_process_id | BIGINT UNSIGNED | não | FK → `process` (dono) |
 | applicability_condition_id | SMALLINT UNSIGNED | sim | FK → `applicability_condition` |
+| regulatory_verified_at | DATEONLY | sim | última verificação regulatória (selo A); **não copiada** no clone de versão — nova versão exige re-verificação (PT-0066) |
+| regulatory_verified_by | BIGINT UNSIGNED | sim | sem FK (precedente `content_version.created_by`) |
 
 ### ArtifactSeal → `artifact_seal` (zona: global)
 | Campo | Tipo | Null | Observações |
@@ -258,17 +275,19 @@ correspondente no DDL.
 | process_id | BIGINT UNSIGNED | não | FK → `process` |
 | applies | BOOLEAN | não | default `true` |
 | na_justification | STRING(500) | sim | obrigatória na aplicação quando `applies=false` |
+| area_label | STRING(80) | sim | área/departamento do organograma (rodadas temáticas; PT-0066) |
 
 ---
 
 ## 3. Jornada gratuita — `models/journey.ts`
 
 ### Objective → `objective` (zona: global — lookup)
-| Campo | Tipo | Null |
-|---|---|---|
-| id | SMALLINT UNSIGNED | não (PK, AI) |
-| theme | STRING(80) | não |
-| name | STRING(200) | não |
+| Campo | Tipo | Null | Observações |
+|---|---|---|---|
+| id | SMALLINT UNSIGNED | não | PK, auto increment |
+| theme | STRING(80) | não | |
+| name | STRING(200) | não | |
+| org_type | ENUM(`cpc`,`orpc`) | não | default `cpc`; menu por tipo de organização (PT-0066) |
 
 ### TenantObjective → `tenant_objective` (zona: tenant)
 | Campo | Tipo | Null | Observações |
