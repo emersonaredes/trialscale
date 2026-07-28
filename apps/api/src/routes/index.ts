@@ -27,7 +27,13 @@ import {
   applicabilitySchema,
 } from '../dtos/content-dtos'
 import { saveObjectivesSchema, scorePainSchema } from '../dtos/journey-dtos'
-import { subscribeSchema, createRoundSchema, setWeightSchema } from '../dtos/paid-journey-dtos'
+import {
+  subscribeSchema,
+  createRoundSchema,
+  setWeightSchema,
+  assigneesSchema,
+  createCustomArtifactSchema,
+} from '../dtos/paid-journey-dtos'
 import { isTest } from '../config/env'
 
 export const routes = Router()
@@ -113,6 +119,25 @@ routes.post(
   requireRole('administrador', 'coordenador'),
   paidJourneyController.concludeRound,
 )
+
+// ---- Artefatos da rodada (PT-0068): detalhe, responsáveis, personalizados ----
+routes.get('/round-artifacts/:id', authenticate, requirePaidPlan, paidJourneyController.artifactDetail)
+routes.post(
+  '/rounds/current/artifacts',
+  authenticate,
+  requirePaidPlan,
+  requireRole('administrador', 'coordenador'),
+  validate(createCustomArtifactSchema),
+  paidJourneyController.createCustomArtifact,
+)
+routes.put(
+  '/assessments/:artifactId/assignees',
+  authenticate,
+  requirePaidPlan,
+  validate(assigneesSchema),
+  paidJourneyController.setAssignees,
+)
+routes.get('/tenant/users', authenticate, paidJourneyController.tenantUsers)
 
 // ---- Jornada gratuita (Fatia 2): objetivos, termômetro, fotografia ----
 routes.get('/objectives', authenticate, journeyController.listObjectives)

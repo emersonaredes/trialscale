@@ -12,6 +12,7 @@ import { TermometroPage } from '../features/journey/TermometroPage'
 import { FotografiaPage } from '../features/journey/FotografiaPage'
 import { AssinaturaPage } from '../features/paid/AssinaturaPage'
 import { RodadaPage } from '../features/paid/RodadaPage'
+import { RodadaArtefatoPage } from '../features/paid/RodadaArtefatoPage'
 import { ConquistasPage } from '../features/paid/ConquistasPage'
 import { CmsListPage } from '../features/cms/CmsListPage'
 import { CmsVersionPage } from '../features/cms/CmsVersionPage'
@@ -58,6 +59,7 @@ export function AppRoutes() {
         {/* Tela unificada (2026-07-24): /priorizacao fundiu-se em /processos */}
         <Route path="/priorizacao" element={<Navigate to="/processos" replace />} />
         <Route path="/rodada" element={<RodadaPage />} />
+        <Route path="/rodada/artefato/:id" element={<RodadaArtefatoPage />} />
         <Route path="/conquistas" element={<ConquistasPage />} />
         <Route path="/assinatura" element={<AssinaturaPage />} />
         <Route

@@ -11,6 +11,7 @@ const DATA_TABLES = [
   'tenant_objective',
   'objective',
   // Raio-X e catálogo (Fatia 1) — filhas primeiro
+  'assessment_assignee',
   'assessment',
   'process_applicability',
   'level_target',

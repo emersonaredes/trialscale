@@ -116,6 +116,19 @@ export const contentRepository = {
   createArtifact(data: ArtifactCreation, t?: Transaction) {
     return Artifact.create(data as never, t ? { transaction: t } : undefined)
   },
+  /** Re-aponta artefatos PERSONALIZADOS (tenant_id preenchido) para a nova
+   *  versão publicada (PT-0068). Cruza tenants por definição — chamado só
+   *  dentro de runWithoutTenantScope no publish, auditado. */
+  async repointCustomArtifacts(fromVersionId: number, toVersionId: number, t?: Transaction) {
+    const [n] = await Artifact.update(
+      { content_version_id: toVersionId },
+      {
+        where: { content_version_id: fromVersionId, tenant_id: { [Op.ne]: null } },
+        ...(t ? { transaction: t } : {}),
+      },
+    )
+    return n
+  },
   async destroyArtifactsByVersion(versionId: number, t?: Transaction) {
     const artifacts = await Artifact.findAll({
       where: { content_version_id: versionId },
