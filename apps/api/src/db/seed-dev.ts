@@ -2,12 +2,14 @@ import { sequelize } from './sequelize'
 import { runWithContext } from '../context/request-context'
 import { identityRepository } from '../repositories/identity-repository'
 import { consentRepository, tenantSpecialtyRepository } from '../repositories/center-repositories'
+import { planRepository } from '../repositories/paid-journey-repository'
 import { passwordHasher } from '../adapters/password-hasher'
 import type { Role } from '../context/request-context'
+import type { TenantCreation } from '../models'
 
 /**
- * Seeds de desenvolvimento (idempotentes): 2 centros × (admin, coordenador,
- * membro) + 1 staff TrialScale. Base da suíte de isolamento e do smoke manual.
+ * Seeds de desenvolvimento (idempotentes): 2 centros (CPC) + 2 ORPCs ×
+ * usuários + 1 staff TrialScale. Base da suíte de isolamento e do smoke.
  * Senha de TODOS os usuários de teste: 'TrialScale#2026' (SÓ dev/teste).
  */
 export const SEED_PASSWORD = 'TrialScale#2026'
@@ -17,6 +19,10 @@ interface SeedTenant {
   cidade: string
   estado: string
   users: Array<{ email: string; name: string; role: Role }>
+  /** Campos extras do tenant (perfil ORPC etc.). */
+  extra?: Partial<TenantCreation>
+  /** Código do plano para assinatura simulada já ativa no seed. */
+  planCode?: string
 }
 
 const TENANTS: SeedTenant[] = [
@@ -40,6 +46,47 @@ const TENANTS: SeedTenant[] = [
       { email: 'membro@beta.dev', name: 'Mateus Membro (Beta)', role: 'membro' },
     ],
   },
+  // ---- ORPCs (PT-0067): perfis distintos para exercitar condições ----
+  {
+    name: 'Gama Pesquisa Clínica (ORPC full service)',
+    cidade: 'São Paulo',
+    estado: 'SP',
+    users: [{ email: 'admin@gama.dev', name: 'Gabriela Admin (Gama)', role: 'administrador' }],
+    planCode: 'premium', // já assinante: navega a jornada paga direto
+    extra: {
+      org_type: 'orpc',
+      modelo_servico: 'full_service',
+      assume_atribuicoes_anvisa: true,
+      assume_farmacovigilancia: true,
+      perfil_fomento: false, // exercita a exclusão do artefato condicional
+      presta_monitoria: true,
+      seleciona_centros: true,
+      presta_gestao_dados: true,
+      ativa_centros: true,
+      centros_geridos_faixa: '16_40',
+      estudos_ativos_faixa: '6_15',
+    },
+  },
+  {
+    name: 'Delta Serviços de Pesquisa (ORPC funcional)',
+    cidade: 'Campinas',
+    estado: 'SP',
+    users: [{ email: 'admin@delta.dev', name: 'Diego Admin (Delta)', role: 'administrador' }],
+    // Delta fica no plano gratuito: demonstra paywall + assinatura simulada
+    extra: {
+      org_type: 'orpc',
+      modelo_servico: 'servicos_funcionais',
+      assume_atribuicoes_anvisa: false,
+      assume_farmacovigilancia: false,
+      perfil_fomento: true, // vê o artefato condicional de editais
+      presta_monitoria: true,
+      seleciona_centros: false,
+      presta_gestao_dados: true,
+      ativa_centros: false,
+      centros_geridos_faixa: '0_5',
+      estudos_ativos_faixa: '0_5',
+    },
+  },
 ]
 
 export async function seedDev(): Promise<{ tenantIds: number[] }> {
@@ -57,14 +104,23 @@ export async function seedDev(): Promise<{ tenantIds: number[] }> {
       continue
     }
 
+    const planId = t.planCode
+      ? ((await planRepository.listAll())
+          .find((p) => p.get('code') === t.planCode)
+          ?.get('id') as number | undefined)
+      : undefined
+
     await sequelize.transaction(async (trx) => {
       const tenant = await identityRepository.createTenant(
         {
           name: t.name,
-          tipo_instituicao: 'privada',
           cidade: t.cidade,
           estado: t.estado,
-          protocolos_ativos_faixa: '11_30',
+          ...(t.extra?.org_type === 'orpc'
+            ? {}
+            : { tipo_instituicao: 'privada' as const, protocolos_ativos_faixa: '11_30' as const }),
+          ...(planId != null ? { plan_id: planId } : {}),
+          ...(t.extra ?? {}),
         },
         trx,
       )
@@ -129,7 +185,7 @@ if (require.main === module) {
     .then(({ tenantIds }) => {
       // eslint-disable-next-line no-console
       console.log(
-        `Seeds ok (tenants ${tenantIds.join(', ')}). Usuários *@alfa.dev / *@beta.dev / staff@trialscale.dev — senha: ${SEED_PASSWORD}`,
+        `Seeds ok (tenants ${tenantIds.join(', ')}). Usuários *@alfa.dev / *@beta.dev (CPC), admin@gama.dev / admin@delta.dev (ORPC) / staff@trialscale.dev — senha: ${SEED_PASSWORD}`,
       )
       process.exit(0)
     })

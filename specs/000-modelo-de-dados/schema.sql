@@ -61,9 +61,10 @@ CREATE TABLE IF NOT EXISTS `applicability_condition` (
   COMMENT='Condição de aplicabilidade de artefato, avaliada contra o perfil do tenant (C2/Q7).';
 
 CREATE TABLE IF NOT EXISTS `objective` (
-  `id`    SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `theme` VARCHAR(80)  NOT NULL,        -- tema do menu (concepção §2)
-  `name`  VARCHAR(200) NOT NULL,
+  `id`       SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `theme`    VARCHAR(80)  NOT NULL,     -- tema do menu (concepção §2)
+  `name`     VARCHAR(200) NOT NULL,
+  `org_type` ENUM('cpc','orpc') NOT NULL DEFAULT 'cpc',  -- menu por tipo de organização (PT-0066)
   PRIMARY KEY (`id`),
   KEY `ix_objective_theme` (`theme`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -105,6 +106,7 @@ CREATE TABLE IF NOT EXISTS `process` (
   `code`                 VARCHAR(20)  NULL,               -- ex.: '2.5' (NULL em custom sem código)
   `name`                 VARCHAR(200) NOT NULL,
   `process_group`        ENUM('central','suporte','gestao','personalizado') NOT NULL,
+  `org_type`             ENUM('cpc','orpc') NOT NULL DEFAULT 'cpc',  -- catálogo por tipo de organização (PT-0066)
   `one_line_description` TEXT NULL,
   `objective_text`       TEXT NULL,
   -- AC-10: custom (tenant_id NOT NULL) nunca entra no benchmark — invariante por coluna gerada:
@@ -179,6 +181,8 @@ CREATE TABLE IF NOT EXISTS `artifact` (
   `why_it_matters`             TEXT NULL,                  -- "por que importa" (texto instrutivo v4)
   `owner_process_id`           BIGINT UNSIGNED NOT NULL,
   `applicability_condition_id` SMALLINT UNSIGNED NULL,
+  `regulatory_verified_at`     DATE NULL,                  -- última verificação regulatória (selo A; PT-0066)
+  `regulatory_verified_by`     BIGINT UNSIGNED NULL,       -- sem FK: precedente content_version.created_by
   `created_at`                 DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `ix_artifact_cv` (`content_version_id`),
@@ -284,6 +288,8 @@ CREATE TABLE IF NOT EXISTS `user` (
 CREATE TABLE IF NOT EXISTS `tenant` (
   `id`                       BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,  -- o PK É o escopo
   `name`                     VARCHAR(200) NOT NULL,
+  -- Tipo de organização (PT-0066): imutável após o cadastro (regra de aplicação)
+  `org_type`                 ENUM('cpc','orpc') NOT NULL DEFAULT 'cpc',
   -- Cadastro do centro (decisão do usuário 2026-07-23; substitui natureza/regiao/volume_faixa):
   `tipo_instituicao`         ENUM('publica','privada','terceiro_setor') NULL,
   `cidade`                   VARCHAR(120) NULL,   -- LGPD: mais granular que "faixa"; proteção do
@@ -297,6 +303,19 @@ CREATE TABLE IF NOT EXISTS `tenant` (
   -- Atributos de perfil que condições de aplicabilidade consultam (Q7, provisório):
   `possui_pi_refrigerado`    TINYINT(1) NULL,
   `possui_amostras`          TINYINT(1) NULL,
+  -- Perfil ORPC (PT-0066; NULL para CPC, mesma filosofia dos possui_*).
+  -- Booleanos de serviço capturados no cadastro; só os 3 primeiros têm condição
+  -- de aplicabilidade artefato-nível hoje (codes = nomes das colunas):
+  `modelo_servico`           ENUM('full_service','servicos_funcionais','aro','outro') NULL,
+  `assume_atribuicoes_anvisa` TINYINT(1) NULL,
+  `assume_farmacovigilancia` TINYINT(1) NULL,
+  `perfil_fomento`           TINYINT(1) NULL,
+  `presta_monitoria`         TINYINT(1) NULL,
+  `seleciona_centros`        TINYINT(1) NULL,
+  `presta_gestao_dados`      TINYINT(1) NULL,
+  `ativa_centros`            TINYINT(1) NULL,
+  `centros_geridos_faixa`    ENUM('0_5','6_15','16_40','41_100','100_mais') NULL,
+  `estudos_ativos_faixa`     ENUM('0_5','6_15','16_40','41_100','100_mais') NULL,
   `created_at`               DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`               DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -436,6 +455,7 @@ CREATE TABLE IF NOT EXISTS `process_applicability` (
   `process_id`       BIGINT UNSIGNED NOT NULL,
   `applies`          TINYINT(1) NOT NULL DEFAULT 1,
   `na_justification` VARCHAR(500) NULL,     -- transparência do N/A (concepção §3)
+  `area_label`       VARCHAR(80) NULL,      -- área/departamento do organograma (rodadas temáticas; PT-0066)
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_proc_appl` (`tenant_id`, `process_id`),
   KEY `ix_proc_appl_process` (`process_id`),
@@ -524,19 +544,22 @@ CREATE TABLE IF NOT EXISTS `tenant_achievement` (
 -- =============================================================================
 
 INSERT IGNORE INTO `artifact_type` (`code`, `name`) VALUES
-  ('infraestrutura',  'Infraestrutura'),
-  ('pop',             'POP (procedimento operacional padrão)'),
-  ('ferramenta',      'Ferramenta de gestão'),
-  ('indicador',       'Indicador'),
-  ('treinamento',     'Treinamento'),
-  ('registro',        'Registro / evidência');
+  ('infraestrutura',        'Infraestrutura'),
+  ('pop',                   'POP (procedimento operacional padrão)'),
+  ('ferramenta',            'Ferramenta de gestão'),
+  ('indicador',             'Indicador'),
+  ('treinamento',           'Treinamento'),
+  ('registro',              'Registro / evidência'),
+  ('documento_governanca',  'Documento de governança');
 
 INSERT IGNORE INTO `origin_seal` (`code`, `name`) VALUES
   ('T', 'Tese'),
   ('G', 'Boa prática GCP/gestão'),
   ('A', 'Exigência de norma/ANVISA'),
   ('P', 'PIC (Plano de Implementação de Centros)'),
-  ('D', 'Sugestão de design');
+  ('D', 'Sugestão de design'),
+  ('R', 'Arquitetura de referência ORPC'),
+  ('I', 'Achado de inspeção (BPC 2024-2025)');
 
 -- Planos do MVP (valores de exemplo da concepção §6, a validar comercialmente)
 INSERT IGNORE INTO `plan` (`code`, `name`, `amount`) VALUES
@@ -544,10 +567,15 @@ INSERT IGNORE INTO `plan` (`code`, `name`, `amount`) VALUES
   ('premium',      'Acompanhamento Premium', 7500.00);
 
 -- Condições de aplicabilidade de artefato (avaliação: ADR 002 / Q7 provisório)
+-- Regra (RN-3): condição sem `case` no avaliador nunca exclui — só entram aqui
+-- codes com campo de perfil correspondente no tenant (code = nome da coluna).
 INSERT IGNORE INTO `applicability_condition` (`code`, `description`) VALUES
-  ('centro_publico',        'Aplicável apenas a centros de instituição pública'),
-  ('possui_pi_refrigerado', 'Aplicável a centros com produto sob investigação refrigerado'),
-  ('possui_amostras',       'Aplicável a centros que manejam amostras biológicas');
+  ('centro_publico',            'Aplicável apenas a centros de instituição pública'),
+  ('possui_pi_refrigerado',     'Aplicável a centros com produto sob investigação refrigerado'),
+  ('possui_amostras',           'Aplicável a centros que manejam amostras biológicas'),
+  ('perfil_fomento',            'Aplicável a organizações com captação via fomento/editais'),
+  ('assume_atribuicoes_anvisa', 'Aplicável quando a ORPC assume atribuições do patrocinador perante a Anvisa'),
+  ('assume_farmacovigilancia',  'Aplicável quando a ORPC assume atividades delegadas de segurança/farmacovigilância');
 
 -- Especialidades médicas (lista inicial editável via backoffice; baseada nas
 -- especialidades reconhecidas no Brasil mais frequentes em pesquisa clínica):

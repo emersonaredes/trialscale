@@ -23,9 +23,13 @@ interface TenantProfile {
   tipo_instituicao: string | null
   possui_pi_refrigerado: boolean | null
   possui_amostras: boolean | null
+  // Perfil ORPC (PT-0067) — codes de condição = nomes das colunas do tenant
+  perfil_fomento: boolean | null
+  assume_atribuicoes_anvisa: boolean | null
+  assume_farmacovigilancia: boolean | null
 }
 
-function conditionApplies(code: string, profile: TenantProfile): boolean {
+export function conditionApplies(code: string, profile: TenantProfile): boolean {
   switch (code) {
     case 'centro_publico':
       return profile.tipo_instituicao === null || profile.tipo_instituicao === 'publica'
@@ -33,6 +37,12 @@ function conditionApplies(code: string, profile: TenantProfile): boolean {
       return profile.possui_pi_refrigerado !== false
     case 'possui_amostras':
       return profile.possui_amostras !== false
+    case 'perfil_fomento':
+      return profile.perfil_fomento !== false
+    case 'assume_atribuicoes_anvisa':
+      return profile.assume_atribuicoes_anvisa !== false
+    case 'assume_farmacovigilancia':
+      return profile.assume_farmacovigilancia !== false
     default:
       return true // condição desconhecida nunca exclui silenciosamente
   }
@@ -78,6 +88,9 @@ async function tenantProfile(): Promise<TenantProfile> {
     tipo_instituicao: tenant.get('tipo_instituicao') as string | null,
     possui_pi_refrigerado: tenant.get('possui_pi_refrigerado') as boolean | null,
     possui_amostras: tenant.get('possui_amostras') as boolean | null,
+    perfil_fomento: tenant.get('perfil_fomento') as boolean | null,
+    assume_atribuicoes_anvisa: tenant.get('assume_atribuicoes_anvisa') as boolean | null,
+    assume_farmacovigilancia: tenant.get('assume_farmacovigilancia') as boolean | null,
   }
 }
 

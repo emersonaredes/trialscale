@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
+import type { OrgType } from '../types/domain'
 
 export type Role = 'administrador' | 'coordenador' | 'membro'
 
@@ -11,6 +12,10 @@ export interface RequestContext {
   tenantId: number | null
   role: Role | null
   isStaff: boolean
+  /** Tipo de organização do tenant (PT-0067): carregado do BANCO pelo
+   *  authenticate (imutável, nunca do body). Quando presente, o hook da zona
+   *  'catalog'/'org-lookup' filtra o catálogo por ele. Staff = null (vê tudo). */
+  orgType?: OrgType | null
   /** true somente dentro de runWithoutTenantScope (auditado). */
   bypassTenantScope?: boolean
   bypassReason?: string
