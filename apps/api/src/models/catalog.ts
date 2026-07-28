@@ -248,6 +248,22 @@ export const Assessment: ModelDefined<AssessmentAttrs, AssessmentCreation> = seq
   },
 )
 
+// ---------------------------------------------------------------- assessment_assignee
+export interface AssessmentAssigneeAttrs {
+  id: number
+  tenant_id: number
+  assessment_id: number
+  user_id: number
+}
+export type AssessmentAssigneeCreation = Optional<AssessmentAssigneeAttrs, 'id' | 'tenant_id'>
+export const AssessmentAssignee: ModelDefined<AssessmentAssigneeAttrs, AssessmentAssigneeCreation> =
+  sequelize.define('assessment_assignee', {
+    id: { type: DataTypes.BIGINT.UNSIGNED, primaryKey: true, autoIncrement: true },
+    tenant_id: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false },
+    assessment_id: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false },
+    user_id: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false },
+  })
+
 export interface ProcessApplicabilityAttrs {
   id: number
   tenant_id: number
@@ -283,4 +299,5 @@ registerTenancy(ArtifactTemplate, 'global')
 registerTenancy(ArtifactType, 'global')
 registerTenancy(ApplicabilityCondition, 'global')
 registerTenancy(Assessment, 'tenant')
+registerTenancy(AssessmentAssignee, 'tenant')
 registerTenancy(ProcessApplicability, 'tenant')

@@ -62,6 +62,7 @@ export interface ArtifactStatus {
   expectedDueDate: string | null
   ownerProcessId: number
   shared: boolean
+  custom: boolean // criado pelo próprio tenant (PT-0068) — sempre complementar
   templates: Array<{ id: number; filename: string }>
 }
 
@@ -147,6 +148,7 @@ export const maturityService = {
         expectedDueDate: marc?.due ?? null,
         ownerProcessId: artifact.get('owner_process_id') as number,
         shared: (artifact.get('owner_process_id') as number) !== processId,
+        custom: artifact.get('tenant_id') != null,
         templates: templates
           .filter((t) => t.get('artifact_id') === id)
           .map((t) => ({ id: t.get('id') as number, filename: t.get('filename') as string })),

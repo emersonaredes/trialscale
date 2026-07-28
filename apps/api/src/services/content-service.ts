@@ -389,14 +389,20 @@ export const contentService = {
       )
 
       // Migração cruza tenants por definição — bypass auditado (ADR 001/002).
-      const n = await runWithoutTenantScope('publicacao-conteudo', () =>
-        migrateAssessments(pairs, t),
-      )
+      const { n, customsRepointed } = await runWithoutTenantScope('publicacao-conteudo', async () => {
+        const migrated = await migrateAssessments(pairs, t)
+        // Artefatos personalizados dos tenants (PT-0068) acompanham a versão
+        // publicada corrente — sem isso, sumiriam do cálculo ao publicar.
+        const repointed = anterior
+          ? await contentRepository.repointCustomArtifacts(anterior.get('id') as number, versionId, t)
+          : 0
+        return { n: migrated, customsRepointed: repointed }
+      })
       await auditService.record(
         'content.published',
         'content_version',
         versionId,
-        { migratedCount: n },
+        { migratedCount: n, customsRepointed },
         { tenantId: null, userId },
         t,
       )

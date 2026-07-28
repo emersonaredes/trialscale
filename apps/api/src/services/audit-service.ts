@@ -10,6 +10,7 @@ const ALLOWED_KEYS = [
   'consentVersion',
   'specialtyCount',
   'migratedCount',
+  'customsRepointed',
   'ip',
 ] as const
 type AllowedKey = (typeof ALLOWED_KEYS)[number]

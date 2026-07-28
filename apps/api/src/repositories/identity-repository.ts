@@ -58,6 +58,16 @@ export const identityRepository = {
       ...(transaction ? { transaction } : {}),
     })
   },
+  findMembershipsByTenant(tenantId: number, transaction?: Transaction) {
+    return Membership.findAll({
+      where: { tenant_id: tenantId },
+      ...(transaction ? { transaction } : {}),
+    })
+  },
+  findUsersByIds(ids: number[], transaction?: Transaction) {
+    if (ids.length === 0) return Promise.resolve([])
+    return User.findAll({ where: { id: { [Op.in]: ids } }, ...(transaction ? { transaction } : {}) })
+  },
 
   // ---- refresh_token (escopo: user/família) -----------------------------
   createRefreshToken(data: RefreshTokenCreation, transaction?: Transaction) {

@@ -38,6 +38,7 @@ export interface ArtifactStatus {
   state: 'nao_iniciado' | 'em_elaboracao' | 'completo'
   expectedDueDate: string | null
   shared: boolean
+  custom: boolean
   templates: Array<{ id: number; filename: string }>
 }
 
