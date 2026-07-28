@@ -69,11 +69,24 @@ export const contentService = {
 
   async updateProcess(
     id: number,
-    patch: { name?: string; oneLineDescription?: string | null; objectiveText?: string | null },
+    patch: {
+      code?: string | null
+      name?: string
+      oneLineDescription?: string | null
+      objectiveText?: string | null
+    },
   ) {
     const process = await contentRepository.findProcessById(id)
     if (!process) throw new NotFoundError('Processo não encontrado.')
+    // Código editável no CMS (PT-0069) — mesma regra de unicidade da criação
+    if (patch.code != null) {
+      const conflito = await contentRepository.findProcessByCode(patch.code)
+      if (conflito && (conflito.get('id') as number) !== id) {
+        throw new ConflictError(`Já existe um processo com o código ${patch.code}.`)
+      }
+    }
     await contentRepository.updateProcess(id, {
+      ...(patch.code !== undefined ? { code: patch.code } : {}),
       ...(patch.name !== undefined ? { name: patch.name } : {}),
       ...(patch.oneLineDescription !== undefined
         ? { one_line_description: patch.oneLineDescription }

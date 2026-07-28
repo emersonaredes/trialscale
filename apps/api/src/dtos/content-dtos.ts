@@ -10,6 +10,7 @@ export const createProcessSchema = z.object({
 })
 
 export const updateProcessSchema = z.object({
+  code: z.string().trim().min(1).max(20).nullable().optional(), // null remove o código
   name: z.string().min(2).max(200).optional(),
   oneLineDescription: z.string().max(2000).nullable().optional(),
   objectiveText: z.string().max(5000).nullable().optional(),

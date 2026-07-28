@@ -48,6 +48,8 @@ export const cmsApi = {
     processGroup: string
     oneLineDescription?: string | null
   }) => apiFetch<{ id: number }>('/api/cms/processes', { method: 'POST', body: JSON.stringify(payload) }),
+  updateProcess: (id: number, payload: { code?: string | null; name?: string }) =>
+    apiFetch<void>(`/api/cms/processes/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
   createDraft: (processId: number) =>
     apiFetch<{ versionId: number; versionNo: number }>(`/api/cms/processes/${processId}/draft`, {
       method: 'POST',

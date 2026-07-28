@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { cmsApi } from './api'
+import { ApiError } from '../../shared/lib/api-client'
 
 export function CmsListPage() {
   const queryClient = useQueryClient()
@@ -11,6 +12,20 @@ export function CmsListPage() {
     queryFn: cmsApi.listProcesses,
   })
   const [novo, setNovo] = useState({ code: '', name: '', processGroup: 'central' })
+  // Edição inline de código/nome (PT-0069)
+  const [editando, setEditando] = useState<{ id: number; code: string; name: string } | null>(null)
+  const [erroEdicao, setErroEdicao] = useState<string | null>(null)
+
+  const salvarEdicao = useMutation({
+    mutationFn: (e: { id: number; code: string; name: string }) =>
+      cmsApi.updateProcess(e.id, { code: e.code.trim() || null, name: e.name.trim() }),
+    onSuccess: () => {
+      setEditando(null)
+      setErroEdicao(null)
+      void queryClient.invalidateQueries({ queryKey: ['cms-processes'] })
+    },
+    onError: (e) => setErroEdicao(e instanceof ApiError ? e.message : 'Erro ao salvar.'),
+  })
 
   const criar = useMutation({
     mutationFn: () =>
@@ -62,25 +77,83 @@ export function CmsListPage() {
             </tr>
           </thead>
           <tbody>
-            {(processos ?? []).map((p) => (
-              <tr key={p.id}>
-                <td className="mono">{p.code ?? '—'}</td>
-                <td>
-                  <b>{p.name}</b>
-                  {p.oneLineDescription && <div className="apoio">{p.oneLineDescription}</div>}
-                </td>
-                <td>{p.processGroup}</td>
-                <td>{p.publishedVersion ? `v${p.publishedVersion}` : <span className="apoio">nunca</span>}</td>
-                <td>
-                  <button
-                    className="pequeno secundario"
-                    onClick={() => abrirRascunho.mutate({ id: p.id, draftVersionId: p.draftVersionId })}
-                  >
-                    {p.draftVersionId ? 'Abrir rascunho' : 'Novo rascunho'}
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {(processos ?? []).map((p) =>
+              editando?.id === p.id ? (
+                <tr key={p.id}>
+                  <td>
+                    <input
+                      className="mono"
+                      value={editando.code}
+                      placeholder="—"
+                      onChange={(e) => setEditando({ ...editando, code: e.target.value })}
+                      style={{ width: 70 }}
+                      maxLength={20}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      value={editando.name}
+                      onChange={(e) => setEditando({ ...editando, name: e.target.value })}
+                      style={{ width: '100%' }}
+                      minLength={2}
+                    />
+                    {erroEdicao && <div className="erro-msg">{erroEdicao}</div>}
+                  </td>
+                  <td>{p.processGroup}</td>
+                  <td>{p.publishedVersion ? `v${p.publishedVersion}` : <span className="apoio">nunca</span>}</td>
+                  <td>
+                    <div className="linha-acoes">
+                      <button
+                        className="pequeno"
+                        disabled={editando.name.trim().length < 2 || salvarEdicao.isPending}
+                        onClick={() => salvarEdicao.mutate(editando)}
+                      >
+                        Salvar
+                      </button>
+                      <button
+                        className="pequeno ghost"
+                        onClick={() => {
+                          setEditando(null)
+                          setErroEdicao(null)
+                        }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                <tr key={p.id}>
+                  <td className="mono">{p.code ?? '—'}</td>
+                  <td>
+                    <b>{p.name}</b>
+                    {p.oneLineDescription && <div className="apoio">{p.oneLineDescription}</div>}
+                  </td>
+                  <td>{p.processGroup}</td>
+                  <td>{p.publishedVersion ? `v${p.publishedVersion}` : <span className="apoio">nunca</span>}</td>
+                  <td>
+                    <div className="linha-acoes">
+                      <button
+                        className="pequeno secundario"
+                        onClick={() => abrirRascunho.mutate({ id: p.id, draftVersionId: p.draftVersionId })}
+                      >
+                        {p.draftVersionId ? 'Abrir rascunho' : 'Novo rascunho'}
+                      </button>
+                      <button
+                        className="pequeno ghost"
+                        title="Editar código e nome"
+                        onClick={() => {
+                          setErroEdicao(null)
+                          setEditando({ id: p.id, code: p.code ?? '', name: p.name })
+                        }}
+                      >
+                        ✎
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ),
+            )}
           </tbody>
         </table>
       </div>

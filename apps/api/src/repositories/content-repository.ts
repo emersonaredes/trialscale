@@ -43,8 +43,23 @@ export const contentRepository = {
   findProcessByCode(code: string, t?: Transaction) {
     return Process.findOne({ where: { code }, ...(t ? { transaction: t } : {}) })
   },
-  listProcesses() {
-    return Process.findAll({ order: [['code', 'ASC'], ['name', 'ASC']] })
+  /** Catálogo em ORDEM NATURAL de código (O2 antes de O10, 1.2 antes de 10) —
+   *  ordenação central: todas as listas de processo derivam daqui (PT-0069). */
+  async listProcesses() {
+    const processos = await Process.findAll()
+    const collator = new Intl.Collator('pt-BR', { numeric: true, sensitivity: 'base' })
+    return processos.sort((a, b) => {
+      const codeA = a.get('code') as string | null
+      const codeB = b.get('code') as string | null
+      if (codeA == null && codeB == null)
+        return collator.compare(a.get('name') as string, b.get('name') as string)
+      if (codeA == null) return 1 // sem código vai para o fim
+      if (codeB == null) return -1
+      return (
+        collator.compare(codeA, codeB) ||
+        collator.compare(a.get('name') as string, b.get('name') as string)
+      )
+    })
   },
 
   // ---- versions ---------------------------------------------------------
