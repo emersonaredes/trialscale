@@ -11,6 +11,20 @@
 >
 > **Nunca cole senhas no chat nem versione o arquivo `env.yaml`.**
 
+## Caminho rápido: um comando
+
+Com o projeto criado, o faturamento ativo e o código no Cloud Shell:
+
+```bash
+bash scripts/deploy-gcp.sh
+```
+
+O script pergunta só o seu e-mail e a senha de apresentador, gera as senhas do
+banco, executa as seções 1 a 5 abaixo, confere o `/api/health` e mostra o
+endereço. Pode ser rodado de novo: retoma de onde parou e também publica uma
+versão nova do código. A configuração fica em `~/.trialscale-deploy/` (só no
+seu Cloud Shell). As seções 1 a 5 ficam como referência do que ele faz.
+
 ## Por que nuvem (e não só o notebook)
 
 Os 200 celulares precisam alcançar o servidor. Em Wi-Fi de evento é comum os
