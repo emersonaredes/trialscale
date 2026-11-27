@@ -2,6 +2,11 @@ import { sequelize } from '../../src/db/sequelize'
 
 /** Tabelas de DADOS truncadas entre testes (lookups seedados são preservados). */
 const DATA_TABLES = [
+  // Workshop ao vivo (spec 006) — filhas primeiro
+  'workshop_assessment',
+  'workshop_objective_vote',
+  'workshop_participant',
+  'workshop_room',
   // Jornada paga (Etapa 3) — process_dependency já está na lista da Fatia 1
   'round_process',
   'round',

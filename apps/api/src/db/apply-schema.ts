@@ -21,6 +21,7 @@ export async function applySchema(database: string = dbName): Promise<void> {
     password: env.DB_PASSWORD,
     multipleStatements: true,
     timezone: 'Z',
+    ...(env.DB_SOCKET_PATH ? { socketPath: env.DB_SOCKET_PATH } : {}),
   })
   try {
     await conn.query(

@@ -19,6 +19,7 @@ export const sequelize = new Sequelize(dbName, env.DB_USER, env.DB_PASSWORD, {
     charset: 'utf8mb4',
     // MySQL DATETIME não guarda offset; lemos como UTC.
     dateStrings: false,
+    ...(env.DB_SOCKET_PATH ? { socketPath: env.DB_SOCKET_PATH } : {}),
   },
-  pool: { max: isTest ? 2 : 10, min: 0, idle: 10_000 },
+  pool: { max: isTest ? 2 : env.DB_POOL_MAX, min: 0, idle: 10_000 },
 })

@@ -15,6 +15,7 @@ const NOME_TELA: Record<string, string> = {
   '/conquistas': 'Conquistas',
   '/assinatura': 'Assinatura',
   '/cms': 'CMS',
+  '/workshops': 'Workshop ao vivo',
 }
 
 /** Faixa de evolução persistente (v3): nível geral em 5 segmentos na escala
@@ -119,6 +120,11 @@ export function Layout() {
           {session?.isStaff && (
             <NavLink to="/cms" className={({ isActive }) => (isActive ? 'ativo' : '')}>
               CMS (backoffice)
+            </NavLink>
+          )}
+          {session?.isStaff && (
+            <NavLink to="/workshops" className={({ isActive }) => (isActive ? 'ativo' : '')}>
+              Workshop ao vivo
             </NavLink>
           )}
         </div>

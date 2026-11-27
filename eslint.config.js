@@ -10,6 +10,9 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
 
+  // Scripts utilitários (Node puro)
+  { files: ['scripts/**/*.mjs'], languageOptions: { globals: globals.node } },
+
   // Backend (apps/api)
   {
     files: ['apps/api/**/*.ts'],

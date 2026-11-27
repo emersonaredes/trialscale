@@ -23,6 +23,8 @@ RUN npm ci --omit=dev -w apps/api && npm cache clean --force
 COPY --from=build /repo/apps/api/dist apps/api/dist
 COPY --from=build /repo/apps/web/dist apps/web/dist
 COPY --from=build /repo/specs/000-modelo-de-dados/schema.sql specs/000-modelo-de-dados/schema.sql
+# Textos instrutivos lidos pelo seed de guias (AUTO_BOOTSTRAP)
+COPY docs/conteudo docs/conteudo
 ENV WEB_DIST=/app/apps/web/dist
 ENV PORT=3333
 EXPOSE 3333

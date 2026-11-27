@@ -16,6 +16,15 @@ const schema = z.object({
   DB_PASSWORD: z.string().min(1),
   DB_NAME: z.string().min(1),
   DB_NAME_TEST: z.string().min(1).default('trialscale_test'),
+  // Opcional (deploy): socket unix do Cloud SQL (/cloudsql/PROJETO:REGIAO:INSTANCIA)
+  // — quando definido, substitui host/porta. E tamanho do pool de conexões.
+  DB_SOCKET_PATH: z.string().min(1).optional(),
+  DB_POOL_MAX: z.coerce.number().int().positive().default(10),
+  // Opcional (deploy): no boot, aplica o schema, carrega o catálogo e garante
+  // o usuário staff (STAFF_EMAIL/STAFF_PASSWORD) — idempotente.
+  AUTO_BOOTSTRAP: z.enum(['true', 'false']).default('false'),
+  STAFF_EMAIL: z.string().email().optional(),
+  STAFF_PASSWORD: z.string().min(10).optional(),
 
   JWT_SECRET: z.string().min(32, 'JWT_SECRET precisa de >=32 caracteres'),
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900), // 15 min

@@ -17,6 +17,9 @@ import { ConquistasPage } from '../features/paid/ConquistasPage'
 import { CmsListPage } from '../features/cms/CmsListPage'
 import { CmsVersionPage } from '../features/cms/CmsVersionPage'
 import { CmsPesosPage } from '../features/cms/CmsPesosPage'
+import { WorkshopListPage } from '../features/workshop/WorkshopListPage'
+import { TelaoPage } from '../features/workshop/TelaoPage'
+import { PlayPage } from '../features/workshop/PlayPage'
 import { Layout } from './Layout'
 import type { ReactNode } from 'react'
 
@@ -43,6 +46,19 @@ export function AppRoutes() {
       <Route path="/esqueci-senha" element={<ForgotPasswordPage />} />
       <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
 
+      {/* Workshop ao vivo (spec 006): celular público + telão em tela cheia */}
+      <Route path="/w/:code" element={<PlayPage />} />
+      <Route
+        path="/workshops/:id"
+        element={
+          <Protegida>
+            <SomenteStaff>
+              <TelaoPage />
+            </SomenteStaff>
+          </Protegida>
+        }
+      />
+
       <Route
         element={
           <Protegida>
@@ -62,6 +78,14 @@ export function AppRoutes() {
         <Route path="/rodada/artefato/:id" element={<RodadaArtefatoPage />} />
         <Route path="/conquistas" element={<ConquistasPage />} />
         <Route path="/assinatura" element={<AssinaturaPage />} />
+        <Route
+          path="/workshops"
+          element={
+            <SomenteStaff>
+              <WorkshopListPage />
+            </SomenteStaff>
+          }
+        />
         <Route
           path="/cms"
           element={

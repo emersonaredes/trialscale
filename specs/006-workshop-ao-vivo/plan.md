@@ -1,7 +1,8 @@
 # Plan 006 — Workshop ao vivo (decisões técnicas)
 
-Proposta para revisão do dono do projeto (2026-11-27). Pontos marcados
-**[revisar]** pedem parecer do app-architect / db-architect antes de codar.
+Implementado em 2026-11-27 (evento no dia seguinte: sem rodada de revisão dos
+agentes arquitetos — os pontos **[revisar]** ficaram decididos como descrito e
+podem ser reavaliados depois do evento).
 
 ## 1. Tempo real: Server-Sent Events (SSE), sem dependência nova
 
@@ -13,7 +14,7 @@ Proposta para revisão do dono do projeto (2026-11-27). Pontos marcados
 - **Hub em memória** (`workshop-hub`): mapa `sala → conexões`. Cada ação grava
   no banco e publica um evento. Para não afogar o telão com 300 votos
   seguidos, o agregado da sala é recalculado e enviado no máximo **a cada
-  250 ms** (coalescência); mudança de passo é enviada na hora.
+  200 ms** (coalescência); mudança de passo é enviada na hora.
 - **Estado recuperável:** o banco é a fonte da verdade. Ao (re)conectar, o
   cliente recebe primeiro um `snapshot` completo do passo atual e depois os
   incrementos — queda de rede ou reinício do servidor não perdem respostas.
@@ -31,15 +32,18 @@ Proposta para revisão do dono do projeto (2026-11-27). Pontos marcados
 | `workshop_objective_vote` | room_id, participant_id, objective_id; único (participant_id, objective_id) |
 | `workshop_assessment` | room_id, participant_id, process_id, `artifact_ids` (JSON), `not_applicable_ids` (JSON), `level` (1–5), finished_at; único (participant_id, process_id) |
 
-- **Tenancy:** dados de sala não pertencem a centro. Proposta: nova categoria
-  `'workshop'` no registro de tenancy (ADR 001), com escopo **por sala**
-  aplicado pelo mesmo mecanismo central (contexto preenchido pelo middleware
-  da sala a partir do token, nunca do body). Evita o escape hatch e mantém a
-  regra "nada de escopo manual". Exige adendo ao ADR 001. **[revisar]**
-- **Leitura do catálogo sem tenant:** o escopo `'catalog'` hoje depende do
-  contexto de tenant. Proposta: leitura "somente global publicado"
-  (`tenant_id IS NULL`) explícita no repository de conteúdo para o workshop.
-  **[revisar]**
+- **Zona à parte (como ficou):** as 4 tabelas `workshop_*` não têm
+  `tenant_id` nem FK para `tenant`. Models registrados como `'global'` (sem
+  hooks de tenant); o escopo é **por sala**, aplicado num único lugar — o
+  `workshop-repository`, cujos métodos exigem `roomId` vindo do token do
+  participante ou da rota de staff (nunca do body). **[revisar]** se vale
+  criar uma categoria `'workshop'` mecanizada no ADR 001.
+- **Leitura do catálogo sem tenant:** as rotas do celular rodam num contexto
+  sem tenant e com `orgType: 'cpc'`; os hooks existentes das zonas
+  `catalog`/`org-lookup` já limitam a leitura ao catálogo global de CPC.
+- **Votos sem deadlock:** `replaceVotes` mexe só na diferença (apaga por PK,
+  insere o que falta). "Apagar tudo e reinserir" em transação gerava deadlock
+  de gap lock com a plateia votando junto (achado no teste de carga).
 
 ## 3. API
 
@@ -49,13 +53,14 @@ Apresentador (`authenticate` + `requireStaff`), prefixo `/api/workshops`:
 - `POST /:id/step` avança/volta passo · `POST /:id/process` define processo
   (passo 5) · `DELETE /:id/participants/:pid` remove participante
 - `GET /:id/events` SSE do telão · `POST /:id/close` encerra
-- `GET /:id/export.csv` resultado agregado pós-evento (anônimo)
+- `GET /:id/processes/:processId` detalhe do processo para o telão
+- (pendente) exportação CSV pós-evento
 
 Participante (sem login; token próprio da sala em `Authorization: Bearer`
 guardado no `localStorage`), prefixo `/api/w/:code`:
 
-- `POST /join` {nickname} → token (rate limit por IP)
-- `GET /state` snapshot · `GET /events` SSE do celular
+- `POST /join` (sem corpo) → identificador sorteado + token (rate limit por IP)
+- `GET /state` snapshot · `GET /events` SSE do celular · `GET /objectives`
 - `PUT /votes` {objectiveIds ≤ 3}
 - `GET /process` artefatos do processo atual por nível
 - `PUT /assessment` {artifactIds, notApplicableIds} → {level, faltam}
@@ -131,3 +136,15 @@ com lint, typecheck e testes passando.
 - **Apelidos impróprios no telão** — remoção pelo apresentador (RN-5).
 - **Matriz objetivo→processo em rascunho [D]** — o ranking do passo 4 herda a
   curadoria atual; vale revisar os pesos antes do primeiro evento.
+
+## 9. Resultado dos testes (2026-11-27, ambiente local)
+
+- Suíte: 91 testes passando (13 novos do workshop: fluxo completo, isolamento
+  entre salas, catálogo só CPC, cálculos puros).
+- Fluxo real em navegador (telão + celular emulado) com 200 celulares
+  simulados (`scripts/workshop-simulacao.mjs`): voto → telão em ~190 ms;
+  troca de passo → celular em ~60 ms.
+- Estresse: 400 celulares, 3 rodadas de 400 votos em janelas de 1 s e 400
+  autoavaliações em 1 s: zero erros; p95 das chamadas < 50 ms.
+- **Não medido:** rede real do evento e latência do Cloud Run/Cloud SQL —
+  repetir o simulador contra a URL publicada (ver docs/deploy-gcp-workshop.md).

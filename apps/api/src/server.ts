@@ -2,8 +2,11 @@ import { createApp } from './app'
 import { env } from './config/env'
 import { logger } from './config/logger'
 import { sequelize } from './db/sequelize'
+import { bootstrap } from './db/bootstrap'
 
 async function main(): Promise<void> {
+  // Antes de conectar: o bootstrap cria o banco/schema se ainda não existirem.
+  if (env.AUTO_BOOTSTRAP === 'true') await bootstrap()
   await sequelize.authenticate()
   logger.info({ db: 'conectado' }, 'banco ok')
   const app = createApp()

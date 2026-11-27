@@ -1,0 +1,8 @@
+# Build da imagem do TrialScale no Google Cloud Build (deploy no Cloud Run).
+# O Dockerfile fica em apps/api/ e o contexto é a RAIZ do repositório.
+# Uso:  gcloud builds submit --config cloudbuild.yaml --substitutions=_IMAGE=<destino>
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '-f', 'apps/api/Dockerfile', '-t', '${_IMAGE}', '.']
+images: ['${_IMAGE}']
+timeout: 1200s

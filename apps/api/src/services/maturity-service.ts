@@ -7,6 +7,7 @@ import {
 import { identityRepository } from '../repositories/identity-repository'
 import { UnauthorizedError } from '../errors/domain-errors'
 import type { AssessmentState } from '../types/domain'
+import { computeLevel } from './level-calculator'
 
 /**
  * MOTOR DE CÁLCULO DE NÍVEL (spec 002; regras da concepção §4):
@@ -155,21 +156,14 @@ export const maturityService = {
       }
     })
 
-    // Nível: todos os essenciais dos níveis <= N completos
-    let level = 1
-    for (let n = 2; n <= 5; n++) {
-      const pendentes = artifacts.filter(
-        (a) => a.classification === 'essencial' && a.level <= n && a.state !== 'completo',
-      )
-      if (pendentes.length === 0) level = n
-      else break
-    }
-    const nextLevelMissing =
-      level < 5
-        ? artifacts.filter(
-            (a) => a.classification === 'essencial' && a.level <= level + 1 && a.state !== 'completo',
-          ).length
-        : 0
+    // Nível: regra única em level-calculator (compartilhada com o Workshop)
+    const { level, nextLevelMissing } = computeLevel(
+      artifacts.map((a) => ({
+        classification: a.classification,
+        level: a.level,
+        done: a.state === 'completo',
+      })),
+    )
 
     const applicability = await processApplicabilityRepository.findByProcessId(processId)
 

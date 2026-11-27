@@ -8,6 +8,15 @@ import { maturityController } from '../controllers/maturity-controller'
 import { journeyController } from '../controllers/journey-controller'
 import { paidJourneyController } from '../controllers/paid-journey-controller'
 import { gamificationController } from '../controllers/gamification-controller'
+import { workshopController } from '../controllers/workshop-controller'
+import { workshopRoom } from '../middlewares/workshop-room'
+import {
+  createRoomSchema,
+  setStepSchema,
+  setProcessSchema,
+  saveVotesSchema,
+  saveWorkshopAssessmentSchema,
+} from '../dtos/workshop-dtos'
 import { authenticate } from '../middlewares/authenticate'
 import { requireStaff } from '../middlewares/require-staff'
 import { requireRole } from '../middlewares/require-role'
@@ -179,3 +188,43 @@ cms.delete('/templates/:id', cmsController.deleteTemplate)
 cms.get('/priority-weights', cmsController.getPriorityWeights)
 cms.put('/priority-weights', validate(setWeightSchema), cmsController.setPriorityWeight)
 routes.use('/cms', cms)
+
+// ---- Workshop ao vivo (spec 006) — zona À PARTE dos centros ----
+// Apresentador: só staff. Telão recebe o estado por SSE.
+const workshops = Router()
+workshops.use(authenticate, requireStaff)
+workshops.get('/', workshopController.listRooms)
+workshops.post('/', validate(createRoomSchema), workshopController.createRoom)
+workshops.get('/:id', workshopController.snapshot)
+workshops.get('/:id/events', workshopController.adminEvents)
+workshops.post('/:id/step', validate(setStepSchema), workshopController.setStep)
+workshops.post('/:id/process', validate(setProcessSchema), workshopController.setProcess)
+workshops.post('/:id/close', workshopController.closeRoom)
+workshops.get('/:id/processes/:processId', workshopController.processDetail)
+workshops.delete('/:id/participants/:participantId', workshopController.removeParticipant)
+routes.use('/workshops', workshops)
+
+// Participante: SEM conta — entra pelo QR e recebe um token opaco da sala.
+// A plateia inteira costuma sair pelo MESMO IP (Wi-Fi do evento): o limite
+// de entrada é alto de propósito, só para conter abuso automatizado.
+const joinLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: isTest ? 100000 : 2000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { code: 'RATE_LIMITED', message: 'Muitas entradas. Aguarde um instante.' },
+})
+const play = Router({ mergeParams: true })
+play.post('/join', joinLimiter, workshopRoom(false), workshopController.join)
+play.get('/state', workshopRoom(true), workshopController.state)
+play.get('/events', workshopRoom(true), workshopController.playerEvents)
+play.get('/objectives', workshopRoom(true), workshopController.objectives)
+play.put('/votes', workshopRoom(true), validate(saveVotesSchema), workshopController.saveVotes)
+play.get('/process', workshopRoom(true), workshopController.currentProcess)
+play.put(
+  '/assessment',
+  workshopRoom(true),
+  validate(saveWorkshopAssessmentSchema),
+  workshopController.saveAssessment,
+)
+routes.use('/w/:code', play)

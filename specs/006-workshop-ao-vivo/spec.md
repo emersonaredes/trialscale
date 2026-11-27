@@ -4,7 +4,9 @@
 > vivo** do TrialScale em workshops e congressos. O apresentador projeta a
 > tela do administrador; a plateia participa pelo celular. Inspiração: quizzes
 > ao vivo com QR code e resultados instantâneos no telão.
-> Status: **PROPOSTA** — decisões em aberto no fim deste arquivo.
+> Status: **IMPLEMENTADO** (2026-11-27) — decisões do dono do projeto no fim
+> deste arquivo. A sala é um conceito À PARTE de centro: módulo de
+> demonstração, sem misturar dados com as respostas reais dos centros.
 
 ## Atores
 
@@ -12,13 +14,14 @@
   uma sala por evento (ex.: "Workshop Congresso Norte Nordeste"), conduz os
   passos e projeta a própria tela.
 - **Participante:** qualquer pessoa da plateia, **sem conta**. Entra pelo QR
-  code, escolhe um apelido e responde pelo celular.
+  code e responde pelo celular. **Não digita nada**: o sistema sorteia um
+  identificador (ex.: "Tucano 42").
 
 ## Fluxo (passos da sala)
 
 | Passo | Tela do apresentador (telão) | Celular do participante |
 |---|---|---|
-| 1. Entrada | QR code grande + código da sala + lista de apelidos entrando ao vivo e contador | Lê o QR → digita apelido → "Aguarde o apresentador" |
+| 1. Entrada | QR code grande + código da sala + lista de apelidos entrando ao vivo e contador | Lê o QR → recebe o identificador sorteado → "Aguarde o apresentador" |
 | 2. Objetivos | Contador de respostas ao vivo; botão "Encerrar votação" a qualquer momento | Lista resumida dos 28 objetivos por tema; escolhe **até 3** e envia (pode trocar até o encerramento) |
 | 3. Objetivos da plateia | Ranking ao vivo dos objetivos mais votados (barras) | "Votação encerrada — olhe o telão" |
 | 4. Processos prioritários | Ranking dos processos mais ligados aos objetivos votados (matriz objetivo×processo); clique abre o **detalhe do processo** (o mesmo conteúdo da tela atual do TrialScale) | Idem |
@@ -47,15 +50,17 @@ processo na mesma sala, ou encerrar a sala.
   workshop nunca divergir do produto.
 - **RN-4 Conteúdo:** só o catálogo **global publicado** (CPC). Nada
   personalizado de centro aparece numa sala.
-- **RN-5 Apelido:** 2–20 caracteres, único na sala (sem diferenciar
-  maiúsculas). O apresentador pode remover um participante (apelido impróprio).
+- **RN-5 Identificador:** sorteado pelo sistema (bicho + número), único na
+  sala; o token fica guardado no aparelho (recarregar a página não cria outro
+  participante). O apresentador pode remover um participante clicando no nome.
 - **RN-6 Ritmo:** só o apresentador avança os passos; o celular sempre mostra
   o passo atual da sala (reconectar = voltar ao ponto certo, sem perder o que
   já respondeu).
-- **RN-7 Dados mínimos (LGPD):** nenhum dado pessoal é pedido — só apelido. O
-  celular mostra aviso curto: "use um apelido, não seu nome completo; não
-  informe nada que identifique seu centro ou participantes de pesquisa". As
-  respostas são anônimas e não ficam ligadas a nenhum centro cadastrado.
+- **RN-7 Dados mínimos (LGPD):** nenhum dado pessoal é pedido nem digitado. O
+  celular mostra aviso curto de demonstração/autodeclaração. As respostas são
+  anônimas e não ficam ligadas a nenhum centro cadastrado.
+- **RN-8 Condicionais:** artefato condicional aparece com "Não se aplica ao
+  meu centro"; marcado assim, conta como atendido no cálculo do nível.
 
 ## Requisitos não funcionais
 
@@ -72,8 +77,8 @@ processo na mesma sala, ou encerrar a sala.
 ## Critérios de aceite (→ testes)
 
 - CA-1: criar sala (staff) gera código único e QR; não staff → 403.
-- CA-2: entrar com apelido válido → token de participante; apelido repetido
-  na sala → 409; sala encerrada → 410.
+- CA-2: entrar (sem enviar nada) → identificador sorteado único + token de
+  participante; sala inexistente → 404; sala encerrada → 409.
 - CA-3: participante não vota mais de 3 objetivos (400); revotar substitui;
   votar depois do encerramento do passo 2 → 409.
 - CA-4: ranking de processos segue RN-2 (teste com matriz e votos conhecidos,
@@ -91,17 +96,14 @@ processo na mesma sala, ou encerrar a sala.
 Catálogo ORPC, ranking/pontuação competitiva entre participantes, exportação
 nominal, integração com o cadastro de centros, perguntas abertas, idiomas.
 
-## Decisões em aberto
+## Decisões do dono do projeto (2026-11-27)
 
-1. **Passos 3 e 4:** proposta = passo 3 mostra o ranking dos **objetivos** e o
-   passo 4 o ranking dos **processos**. Confirmar.
-2. **Ordem das 3 escolhas:** proposta = sem ordem (cada voto vale 1). Opção:
-   1ª escolha vale mais.
-3. **Quem cria salas:** proposta = só usuários staff do TrialScale.
-4. **Artefatos condicionais** (ex.: só se o centro faz fase I): proposta =
-   mostrar com o rótulo "se aplicável" e o participante pode marcar "não se
-   aplica", que conta como atendido para o cálculo.
-5. **Guarda dos dados:** proposta = sala e respostas anônimas guardadas para
-   relatório pós-evento (CSV agregado) e apagadas após prazo a definir.
-6. **Data do primeiro workshop e público esperado** (dimensiona RNF-2 e o
-   cronograma).
+1. Passo 3 = ranking dos **objetivos** respondidos; passo 4 = ranking dos
+   **processos**, calculado só pela matriz (ninguém escolhe processo).
+2. As 3 escolhas **não têm ordem** (cada voto vale 1).
+3. **Só staff** cria sala.
+4. Artefatos condicionais: "não se aplica" conta como atendido (RN-8).
+5. Os dados ficam guardados; sem política de prazo por enquanto.
+6. Ninguém digita apelido: identificador sorteado (RN-5).
+7. Sala é conceito à parte de centro; nada se mistura com dados reais.
+8. Primeiro evento: 200 pessoas. Ainda fora desta versão: exportação CSV.

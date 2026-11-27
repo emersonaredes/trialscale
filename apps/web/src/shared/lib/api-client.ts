@@ -7,6 +7,11 @@ export function setAccessToken(token: string | null): void {
   accessToken = token
 }
 
+/** Token atual (para streams SSE via fetch, que montam o header à mão). */
+export function getAccessToken(): string | null {
+  return accessToken
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,

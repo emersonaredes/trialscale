@@ -28,6 +28,8 @@ termômetro de dor → rodadas de melhoria por artefatos → níveis 1–5.
 - `npm run db:apply` — aplica specs/000-modelo-de-dados/schema.sql (fonte da verdade)
 - `npm run seed` — 2 centros × 3 papéis + staff (senha TrialScale#2026)
 - `npm run seed:content` — publica os 5 processos do MVP via fluxo real do CMS
+- `node scripts/workshop-simulacao.mjs <URL> <CÓDIGO> [N]` — plateia simulada
+  do Workshop ao vivo (spec 006; deploy: docs/deploy-gcp-workshop.md)
 
 ## Design System
 Siga estritamente docs/design-system/design-system.md (TrialScale DS v2

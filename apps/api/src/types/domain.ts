@@ -16,3 +16,14 @@ export type VersionStatus = 'rascunho' | 'publicado' | 'arquivado'
 export type Classification = 'essencial' | 'complementar'
 export type AssessmentState = 'nao_iniciado' | 'em_elaboracao' | 'completo'
 export type AchievementType = 'selo' | 'medalha'
+
+/** Passos da sala do Workshop ao vivo (spec 006), na ordem do roteiro. */
+export const WORKSHOP_STEPS = [
+  'entrada',
+  'objetivos',
+  'ranking_objetivos',
+  'ranking_processos',
+  'avaliacao',
+  'distribuicao',
+] as const
+export type WorkshopStep = (typeof WORKSHOP_STEPS)[number]

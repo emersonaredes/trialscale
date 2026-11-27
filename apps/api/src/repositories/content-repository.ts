@@ -60,6 +60,10 @@ export const contentRepository = {
       ...(t ? { transaction: t } : {}),
     })
   },
+  /** Todas as versões publicadas (1 query) — usado pelo Workshop ao vivo. */
+  listPublishedVersions() {
+    return ContentVersion.findAll({ where: { status: 'publicado' } })
+  },
   findDraftVersion(processId: number, t?: Transaction) {
     return ContentVersion.findOne({
       where: { process_id: processId, status: 'rascunho' },
