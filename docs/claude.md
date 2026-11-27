@@ -47,8 +47,13 @@ Versionamento/compartilhamento de conteúdo: docs/adr/002-*.md
 ## Convenções
 - TypeScript estrito em todo o código; validação Zod nas fronteiras da API
 - Toda query com escopo de tenant via [mecanismo central] — NUNCA escopo manual
-- Commits semânticos: feat(Escopo): descrição [PT-XXXX]
-- Branch por tarefa → PR → revisão humana → merge; nada direto na main
+- Commits semânticos: feat(Escopo): descrição — código de tarefa [PT-XXXX]
+  é opcional (use quando houver)
+- Fluxo de entrega (decisão do dono do projeto, 2026-11-27): o TrialScale
+  NÃO segue o fluxo de branches/PR/tarefas da Polo Trial. O que o dono do
+  projeto pedir e aprovar na conversa sobe direto na main, sem PR e sem
+  código de tarefa. Branch + PR só quando ele pedir. Antes de subir: lint e
+  typecheck passando.
 - Testes acompanham a implementação; critérios de aceite da spec viram testes
 - UI em português do Brasil; termos consagrados do setor podem ficar em
   inglês (site, feasibility, SAE)

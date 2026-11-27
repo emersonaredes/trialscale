@@ -5,7 +5,9 @@
 2. DADOS SENSÍVEIS: nunca dados identificáveis de participantes de pesquisa
    no sistema, em logs ou em contexto de IA. Nunca credenciais/tokens/.env
    em código, respostas ou logs.
-3. REVISÃO HUMANA: nenhum merge sem revisão e aprovação humana do diff.
+3. REVISÃO HUMANA: nenhuma mudança entra na main sem aprovação humana. A
+   aprovação explícita do dono do projeto na conversa vale como revisão e
+   permite subir direto na main (sem PR).
    Migração de banco é revisada linha a linha; nunca aplicada direto em produção.
 4. TESTES: toda lógica de negócio tem testes; motor de cálculo e lógica
    financeira exigem casos de borda. Queries sempre parametrizadas.
